@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DecoPress Patch Production Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --blue:#185FA5;
+    --blue-dark:#0C447C;
+    --blue-light:#E6F1FB;
+    --bg:#F4F7FF;
+    --card:#ffffff;
+    --border:#E0E4EE;
+    --text:#1A1D23;
+    --text-secondary:#6B7280;
+    --teal:#0F6E56;
+    --amber:#BA7517;
+    --danger:#E24B4A;
+    --success:#0F6E56;
+    --radius:10px;
+    --shadow:0 1px 4px rgba(0,0,0,0.06);
+  }
+  body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+  
+  /* HEADER */
+  .header{background:var(--blue);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,0.3)}
+  .header-left{display:flex;align-items:center;gap:12px}
+  .logo{background:#fff;color:var(--blue);font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:5px 10px;border-radius:6px;letter-spacing:.5px}
+  .header h1{font-family:'Montserrat',sans-serif;font-size:15px;font-weight:600;color:#fff;letter-spacing:.3px}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .operator-wrap{display:flex;align-items:center;gap:8px}
+  .operator-label{font-size:12px;color:rgba(255,255,255,0.7)}
+  .operator-input{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 10px;font-size:12px;color:#fff;width:140px;font-family:'Inter',sans-serif}
+  .operator-input::placeholder{color:rgba(255,255,255,0.5)}
+  .date-badge{font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap}
+
+  /* STATUS BAR */
+  .status-bar{height:36px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;display:none}
+  .status-bar.success{background:#D1FAE5;color:#065F46;display:flex}
+  .status-bar.error{background:#FEE2E2;color:#991B1B;display:flex}
+  .status-bar.saving{background:#EFF6FF;color:var(--blue);display:flex}
+
+  /* MAIN */
+  .main{max-width:900px;margin:0 auto;padding:20px 16px}
+
+  /* CARD */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .card-title{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+  .card-title::before{content:'';width:3px;height:14px;background:var(--blue);border-radius:2px;display:inline-block}
+
+  /* FORM TOP */
+  .form-top{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:14px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;font-weight:500;color:var(--text-secondary)}
+  .field input,.field select,.field textarea{font-size:13px;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:#FAFBFF;color:var(--text);font-family:'Inter',sans-serif;transition:border-color .15s}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--blue);background:#fff}
+
+  /* ASSETS */
+  .assets-label{font-size:11px;font-weight:500;color:var(--text-secondary);margin-bottom:8px}
+  .assets-header{display:grid;grid-template-columns:170px 1fr 80px 90px 80px 30px;gap:8px;margin-bottom:5px;padding:0 2px}
+  .assets-header span{font-size:10px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em}
+  .asset-row{display:grid;grid-template-columns:170px 1fr 80px 90px 80px 30px;gap:8px;align-items:center;margin-bottom:7px}
+  .asset-row select,.asset-row input{font-size:12px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:#FAFBFF;color:var(--text);font-family:'Inter',sans-serif;width:100%}
+  .asset-row select:focus,.asset-row input:focus{outline:none;border-color:var(--blue)}
+  .total-display{font-size:12px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);text-align:right;width:100%}
+  .remove-btn{width:28px;height:28px;border:1px solid var(--border);background:none;border-radius:6px;cursor:pointer;font-size:14px;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+  .remove-btn:hover{border-color:var(--danger);color:var(--danger);background:#FEF2F2}
+  .add-asset-btn{font-size:12px;color:var(--blue);background:none;border:1px dashed var(--blue);border-radius:7px;padding:5px 14px;cursor:pointer;margin:4px 0 14px;transition:background .15s;font-family:'Inter',sans-serif}
+  .add-asset-btn:hover{background:var(--blue-light)}
+  .divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+  .form-bottom{display:flex;justify-content:space-between;align-items:center}
+  .add-job-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;letter-spacing:.3px;transition:background .15s}
+  .add-job-btn:hover{background:var(--blue-dark)}
+  .add-job-btn:disabled{background:#9DB8D9;cursor:not-allowed}
+
+  /* SUMMARY */
+  .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  .metric{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+  .metric-label{font-size:10px;font-weight:500;color:var(--text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+  .metric-value{font-size:22px;font-weight:700;color:var(--blue);font-family:'Montserrat',sans-serif}
+
+  /* JOB LIST */
+  .job-table{width:100%;border-collapse:collapse;font-size:12px}
+  .job-table th{font-size:10px;font-weight:600;color:var(--text-secondary);text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
+  .job-table td{padding:8px 8px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+  .job-table tr:last-child td{border-bottom:none}
+  .job-table tr:hover td{background:#FAFBFF}
+  .empty-state{text-align:center;padding:24px;color:var(--text-secondary);font-size:12px}
+  .job-num{font-weight:600;color:var(--blue-dark)}
+  .time-cell{color:var(--text-secondary);font-size:11px;white-space:nowrap}
+  .saving-indicator{font-size:11px;color:var(--blue);font-style:italic}
+
+  /* BADGES */
+  .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;margin:1px 2px 1px 0;white-space:nowrap}
+  .badge-F{background:#E6F1FB;color:#0C447C}
+  .badge-E{background:#E1F5EE;color:#085041}
+  .badge-3D{background:#EEEDFE;color:#3C3489}
+  .badge-ECO{background:#F1EFE8;color:#444441}
+  .badge-DTF{background:#EAF3DE;color:#27500A}
+  .badge-EMBCUT{background:#FBEAF0;color:#72243E}
+  .badge-EMBBRD{background:#FAEEDA;color:#633806}
+  .badge-SET{background:#FAECE7;color:#712B13}
+
+  /* AUTH WARNING */
+  .auth-banner{background:#FEF3C7;border:1px solid #FCD34D;border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;font-size:12px;color:#92400E;display:none}
+  .auth-banner.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">DP</div>
+    <h1>Patch Production Tracker</h1>
+  </div>
+  <div class="header-right">
+    <div class="operator-wrap">
+      <span class="operator-label">Operator:</span>
+      <input class="operator-input" type="text" id="operator-name" placeholder="Enter your name">
+    </div>
+    <span class="date-badge" id="date-display"></span>
+  </div>
+</div>
+
+<div class="status-bar" id="status-bar"></div>
+
+<div class="main">
+
+  <div class="auth-banner" id="auth-banner">
+    ⚠️ Not signed in to Microsoft. <a href="https://decopresscom.sharepoint.com/sites/DecoPressPatchDepartment" target="_blank" style="color:#92400E;font-weight:600">Click here to sign in</a>, then come back and refresh this page.
+  </div>
+
+  <div class="card">
+    <div class="card-title">Quick Job Entry</div>
+
+    <div class="form-top">
+      <div class="field">
+        <label>Job Number</label>
+        <input type="text" id="job-num" placeholder="e.g. 10482">
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <input type="text" id="job-desc" placeholder="e.g. Acme Corp — chest patch">
+      </div>
+    </div>
+
+    <div class="assets-label">Assets</div>
+    <div class="assets-header">
+      <span>Patch Type</span>
+      <span>Notes</span>
+      <span>Qty</span>
+      <span>Unit Price</span>
+      <span style="text-align:right">Total</span>
+      <span></span>
+    </div>
+    <div id="asset-list"></div>
+    <button class="add-asset-btn" id="add-asset-btn">+ add asset</button>
+
+    <div class="divider"></div>
+    <div class="form-bottom">
+      <span id="form-status" style="font-size:12px;color:var(--text-secondary)"></span>
+      <button class="add-job-btn" id="add-job-btn">Add Job</button>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="metric"><div class="metric-label">Jobs Completed</div><div class="metric-value" id="s-jobs">0</div></div>
+    <div class="metric"><div class="metric-label">Total Pieces</div><div class="metric-value" id="s-pieces">0</div></div>
+    <div class="metric"><div class="metric-label">Total Revenue</div><div class="metric-value" id="s-rev">$0.00</div></div>
+    <div class="metric"><div class="metric-label">Avg Per Piece</div><div class="metric-value" id="s-avg">$0.00</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Today's Job List</div>
+    <table class="job-table">
+      <thead>
+        <tr>
+          <th>Job #</th>
+          <th>Description</th>
+          <th>Assets</th>
+          <th style="text-align:right">Pieces</th>
+          <th style="text-align:right">Revenue</th>
+          <th>Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="job-list">
+        <tr><td colspan="7" class="empty-state">No jobs entered yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const SITE = 'https://decopresscom.sharepoint.com/sites/DecoPressPatchDepartment';
+const LIST = 'Production log';
+const LIST_API = `${SITE}/_api/web/lists/getbytitle('${encodeURIComponent(LIST)}')/items`;
+
+// ── STATE ───────────────────────────────────────────────
+let jobs = [];
+let assetCount = 0;
+
+// ── PATCH TYPES ─────────────────────────────────────────
+const TYPES = [
+  { group: 'Laser / Print', opts: [
+    { val: 'F', label: 'F — sublimated' },
+    { val: 'E', label: 'E — etched' },
+    { val: '3D', label: '3D — three-dimensional' },
+    { val: 'ECO', label: 'ECO — eco patch' },
+    { val: 'DTF', label: 'DTF — direct film' },
+    { val: 'EMB-CUT', label: 'EMB-CUT — embroidery cut' },
+  ]},
+  { group: 'Embroidery', opts: [
+    { val: 'EMB-BRD', label: 'EMB-BRD — emb border' },
+  ]},
+  { group: 'Setup', opts: [
+    { val: 'SET', label: 'SET — setup' },
+  ]}
+];
+
+const BADGE_MAP = { 'F':'badge-F','E':'badge-E','3D':'badge-3D','ECO':'badge-ECO','DTF':'badge-DTF','EMB-CUT':'badge-EMBCUT','EMB-BRD':'badge-EMBBRD','SET':'badge-SET' };
+
+// ── DATE ────────────────────────────────────────────────
+function formatDate(d) {
+  return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+function formatTime(d) {
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+}
+document.getElementById('date-display').textContent = formatDate(new Date());
+
+// ── SELECT HTML ─────────────────────────────────────────
+function makeTypeSelect(val='') {
+  let s = `<select class="type-sel"><option value="">Select type...</option>`;
+  TYPES.forEach(g => {
+    s += `<optgroup label="— ${g.group} —">`;
+    g.opts.forEach(o => s += `<option value="${o.val}"${o.val===val?' selected':''}>${o.label}</option>`);
+    s += `</optgroup>`;
+  });
+  return s + `</select>`;
+}
+
+// ── ADD ASSET ROW ────────────────────────────────────────
+function addAssetRow(removable=true) {
+  assetCount++;
+  const div = document.createElement('div');
+  div.className = 'asset-row';
+  div.innerHTML = `
+    ${makeTypeSelect()}
+    <input type="text" placeholder="optional notes" class="notes-f">
+    <input type="number" placeholder="0" min="0" class="qty-f" style="text-align:right">
+    <input type="number" placeholder="0.00" min="0" step="0.01" class="price-f" style="text-align:right">
+    <div class="total-display">$0.00</div>
+    <button class="remove-btn" style="${removable?'':'visibility:hidden'}" title="Remove">×</button>
+  `;
+  div.querySelector('.qty-f').addEventListener('input', () => calcTotal(div));
+  div.querySelector('.price-f').addEventListener('input', () => calcTotal(div));
+  div.querySelector('.remove-btn').addEventListener('click', () => div.remove());
+  document.getElementById('asset-list').appendChild(div);
+}
+
+function calcTotal(row) {
+  const q = parseFloat(row.querySelector('.qty-f').value) || 0;
+  const p = parseFloat(row.querySelector('.price-f').value) || 0;
+  row.querySelector('.total-display').textContent = '$' + (q * p).toFixed(2);
+}
+
+// ── SHAREPOINT SAVE ──────────────────────────────────────
+async function saveToSharePoint(item) {
+  try {
+    // Get request digest (required for SharePoint REST API writes)
+    const digestResp = await fetch(`${SITE}/_api/contextinfo`, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json;odata=verbose' },
+      credentials: 'include'
+    });
+    if (!digestResp.ok) {
+      if (digestResp.status === 401 || digestResp.status === 403) {
+        document.getElementById('auth-banner').classList.add('show');
+        throw new Error('Not authenticated');
+      }
+      throw new Error(`Digest failed: ${digestResp.status}`);
+    }
+    const digestData = await digestResp.json();
+    const digest = digestData.d.GetContextWebInformation.FormDigestValue;
+
+    // Post item to SharePoint list
+    const resp = await fetch(LIST_API, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json;odata=verbose',
+        'Content-Type': 'application/json;odata=verbose',
+        'X-RequestDigest': digest
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        '__metadata': { 'type': 'SP.Data.Production_x0020_logListItem' },
+        'Title': item.jobNumber,
+        'Description': item.description,
+        'Operator': item.operator,
+        'Patch_x0020_Type': item.patchType,
+        'Quantity': item.quantity,
+        'Unit_x0020_Price': item.unitPrice,
+        'Total_x0020_Revenue': item.totalRevenue,
+        'Notes': item.notes,
+        'Date': item.date
+      })
+    });
+
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData?.error?.message?.value || `Save failed: ${resp.status}`);
+    }
+    return true;
+  } catch(e) {
+    console.error('SharePoint save error:', e);
+    throw e;
+  }
+}
+
+// ── STATUS BAR ───────────────────────────────────────────
+function showStatus(msg, type) {
+  const bar = document.getElementById('status-bar');
+  bar.textContent = msg;
+  bar.className = `status-bar ${type}`;
+  if (type === 'success') setTimeout(() => bar.className = 'status-bar', 3000);
+}
+
+// ── ADD JOB ──────────────────────────────────────────────
+document.getElementById('add-asset-btn').addEventListener('click', () => addAssetRow(true));
+
+document.getElementById('add-job-btn').addEventListener('click', async () => {
+  const jobNum = document.getElementById('job-num').value.trim();
+  const desc = document.getElementById('job-desc').value.trim();
+  const operator = document.getElementById('operator-name').value.trim() || 'Unknown';
+
+  if (!jobNum) { alert('Please enter a job number.'); return; }
+
+  const rows = document.querySelectorAll('#asset-list .asset-row');
+  let assets = [];
+  rows.forEach(r => {
+    const type = r.querySelector('.type-sel').value;
+    const notes = r.querySelector('.notes-f').value.trim();
+    const qty = parseFloat(r.querySelector('.qty-f').value) || 0;
+    const price = parseFloat(r.querySelector('.price-f').value) || 0;
+    if (type && qty > 0) assets.push({ type, notes, qty, price, total: qty * price });
+  });
+
+  if (!assets.length) { alert('Add at least one asset with a type and quantity.'); return; }
+
+  const btn = document.getElementById('add-job-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  showStatus('Saving to SharePoint...', 'saving');
+
+  const now = new Date();
+  const timeStr = formatTime(now);
+  let allSaved = true;
+
+  // Save one row per asset
+  for (const asset of assets) {
+    try {
+      await saveToSharePoint({
+        jobNumber: jobNum,
+        description: desc,
+        operator: operator,
+        patchType: asset.type,
+        quantity: asset.qty,
+        unitPrice: asset.price,
+        totalRevenue: asset.total,
+        notes: asset.notes,
+        date: now.toISOString()
+      });
+    } catch(e) {
+      allSaved = false;
+      showStatus('❌ Error saving — check your Microsoft login.', 'error');
+      break;
+    }
+  }
+
+  if (allSaved) {
+    const totalQty = assets.reduce((a,x) => a + x.qty, 0);
+    const totalRev = assets.reduce((a,x) => a + x.total, 0);
+    jobs.push({ jobNum, desc, assets, totalQty, totalRev, timeStr, saved: true });
+    renderJobList();
+    updateSummary();
+    resetForm();
+    showStatus('✓ Job saved to SharePoint', 'success');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Add Job';
+});
+
+// ── RENDER ───────────────────────────────────────────────
+function renderJobList() {
+  const tbody = document.getElementById('job-list');
+  if (!jobs.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No jobs entered yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = jobs.map(j => `
+    <tr>
+      <td class="job-num">${j.jobNum}</td>
+      <td>${j.desc || '—'}</td>
+      <td>${j.assets.map(a => `<span class="badge ${BADGE_MAP[a.type]||'badge-F'}">${a.type}</span>`).join('')}</td>
+      <td style="text-align:right;font-weight:500">${j.totalQty}</td>
+      <td style="text-align:right;font-weight:500">$${j.totalRev.toFixed(2)}</td>
+      <td class="time-cell">${j.timeStr}</td>
+      <td><span style="font-size:11px;color:var(--teal)">✓ Saved</span></td>
+    </tr>
+  `).join('');
+}
+
+function updateSummary() {
+  const totJobs = jobs.length;
+  const totPieces = jobs.reduce((a,j) => a + j.totalQty, 0);
+  const totRev = jobs.reduce((a,j) => a + j.totalRev, 0);
+  const avg = totPieces > 0 ? totRev / totPieces : 0;
+  document.getElementById('s-jobs').textContent = totJobs;
+  document.getElementById('s-pieces').textContent = totPieces;
+  document.getElementById('s-rev').textContent = '$' + totRev.toFixed(2);
+  document.getElementById('s-avg').textContent = '$' + avg.toFixed(2);
+}
+
+function resetForm() {
+  document.getElementById('job-num').value = '';
+  document.getElementById('job-desc').value = '';
+  document.getElementById('asset-list').innerHTML = '';
+  assetCount = 0;
+  addAssetRow(false);
+}
+
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  addAssetRow(false);
+});
+</script>
+</body>
+</html>
