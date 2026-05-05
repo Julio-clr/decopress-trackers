@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DecoPress — Art & Files Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Inter:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--bg:#F4F7FF;--card:#fff;--border:#E0E4EE;--text:#1A1D23;--muted:#6B7280;--teal:#0F6E56;--amber:#BA7517;--danger:#E24B4A;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.06)}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+.header{background:var(--blue);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,0.3)}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{background:#fff;color:var(--blue);font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:5px 10px;border-radius:6px}
+.header h1{font-family:'Montserrat',sans-serif;font-size:15px;font-weight:600;color:#fff}
+.header-right{display:flex;align-items:center;gap:12px}
+.op-input{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 10px;font-size:12px;color:#fff;width:140px;font-family:'Inter',sans-serif}
+.op-input::placeholder{color:rgba(255,255,255,0.5)}
+.op-label{font-size:12px;color:rgba(255,255,255,0.7)}
+.date-badge{font-size:11px;color:rgba(255,255,255,0.7)}
+.status-bar{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;transition:height .2s}
+.status-bar.show{height:36px}
+.status-bar.success{background:#D1FAE5;color:#065F46}
+.status-bar.error{background:#FEE2E2;color:#991B1B}
+.status-bar.saving{background:#EFF6FF;color:var(--blue)}
+.main{max-width:900px;margin:0 auto;padding:20px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'';width:3px;height:14px;background:var(--blue);border-radius:2px;display:inline-block}
+.form-top{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:500;color:var(--muted)}
+.field input,.field select{font-size:12px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:#FAFBFF;color:var(--text);font-family:'Inter',sans-serif;width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue)}
+.field input.duplicate{border-color:var(--amber);background:#FFFBEB}
+.assets-label{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:8px}
+.assets-hdr{display:grid;grid-template-columns:28px 160px 1fr 28px;gap:8px;margin-bottom:5px}
+.assets-hdr span{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.asset-row{display:grid;grid-template-columns:28px 160px 1fr 28px;gap:8px;align-items:center;margin-bottom:7px}
+.asset-num{font-size:11px;color:var(--muted);text-align:center;font-weight:600}
+.asset-row select,.asset-row input{font-size:12px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:#FAFBFF;color:var(--text);font-family:'Inter',sans-serif;width:100%}
+.rm-btn{width:26px;height:26px;border:1px solid var(--border);background:none;border-radius:6px;cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.rm-btn:hover{border-color:#E24B4A;color:#E24B4A}
+.add-asset-btn{font-size:12px;color:var(--blue);background:none;border:1px dashed var(--blue);border-radius:7px;padding:5px 14px;cursor:pointer;margin:4px 0 14px;font-family:'Inter',sans-serif}
+.add-asset-btn:hover{background:var(--blue-light)}
+.divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+.form-bottom{display:flex;justify-content:space-between;align-items:end;gap:16px}
+.dup-warning{font-size:11px;color:var(--amber);font-weight:500;display:none}
+.dup-warning.show{display:block}
+.add-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;white-space:nowrap}
+.add-btn:hover{background:var(--blue-dark)}
+.add-btn:disabled{background:#9DB8D9;cursor:not-allowed}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.metric-label{font-size:10px;font-weight:500;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.metric-value{font-size:22px;font-weight:700;color:var(--blue);font-family:'Montserrat',sans-serif}
+.metric-value.good{color:var(--teal)}
+.job-table{width:100%;border-collapse:collapse;font-size:11px}
+.job-table th{font-size:10px;font-weight:600;color:var(--muted);text-align:left;padding:6px 7px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
+.job-table td{padding:7px 7px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.job-table tr:last-child td{border-bottom:none}
+.empty{text-align:center;padding:24px;color:var(--muted);font-size:12px}
+.badge{display:inline-block;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600;margin:1px 2px 1px 0}
+.bpf{background:#E6F1FB;color:#0C447C}.bth{background:#E1F5EE;color:#085041}.bbo{background:#EEEDFE;color:#3C3489}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <div class="logo">DP</div>
+    <h1>Art & Files Tracker</h1>
+  </div>
+  <div class="header-right">
+    <span class="op-label">Operator:</span>
+    <input class="op-input" type="text" id="op" placeholder="Enter your name">
+    <span class="date-badge" id="date-disp"></span>
+  </div>
+</div>
+<div class="status-bar" id="status"></div>
+<div class="main">
+  <div class="card">
+    <div class="card-title">Job Entry</div>
+    <div class="form-top">
+      <div class="field"><label>Job Number</label><input type="text" id="jnum" placeholder="e.g. 10482" autocomplete="off"></div>
+      <div class="field"><label>Description</label><input type="text" id="jdesc" placeholder="e.g. Acme Corp — chest patch"></div>
+    </div>
+    <div class="assets-label">Assets</div>
+    <div class="assets-hdr"><span>#</span><span>File Type</span><span>Asset Code</span><span></span></div>
+    <div id="asset-list"></div>
+    <button class="add-asset-btn" id="add-asset">+ add asset</button>
+    <div class="divider"></div>
+    <div class="form-bottom">
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <span class="dup-warning" id="dup-warn">⚠ This job number was already logged today. Double check before saving.</span>
+        <div class="field" style="flex:1"><label>Notes</label><input type="text" id="notes" placeholder="Optional notes..."></div>
+      </div>
+      <button class="add-btn" id="add-job">Upload Complete</button>
+    </div>
+  </div>
+  <div class="summary-grid">
+    <div class="metric"><div class="metric-label">Jobs Processed</div><div class="metric-value" id="s-jobs">0</div></div>
+    <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value" id="s-assets">0</div></div>
+    <div class="metric"><div class="metric-label">Prod. Files Uploaded</div><div class="metric-value good" id="s-pf">0</div></div>
+    <div class="metric"><div class="metric-label">Thumbnails Created</div><div class="metric-value good" id="s-th">0</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Today's Job List</div>
+    <table class="job-table">
+      <thead><tr><th>Job #</th><th>Description</th><th>Assets</th><th style="text-align:right">Count</th><th>Uploaded</th><th>Notes</th></tr></thead>
+      <tbody id="job-list"><tr><td colspan="6" class="empty">No jobs entered yet.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyb-kBmua6rAqtAksCRrt-5cw2l79XyLFVlXGOQJTUwXHovBx65kzrXCS9aZCVWGdo0aw/exec';
+let jobs=[],assetCount=0;
+document.getElementById('date-disp').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+function addRow(){
+  assetCount++;const idx=assetCount;
+  const div=document.createElement('div');div.className='asset-row';
+  div.innerHTML=`<div class="asset-num">${idx}</div><select class="type-sel"><option value="">Select type...</option><option value="PF">Production file</option><option value="TH">Thumbnail</option><option value="BOTH">Both</option></select><input type="text" placeholder="e.g. A-001" class="code-f"><button class="rm-btn">×</button>`;
+  div.querySelector('.rm-btn').addEventListener('click',()=>{div.remove();renumber();});
+  document.getElementById('asset-list').appendChild(div);
+}
+function renumber(){document.querySelectorAll('#asset-list .asset-row').forEach((r,i)=>r.querySelector('.asset-num').textContent=i+1);}
+document.getElementById('jnum').addEventListener('input',function(){
+  const val=this.value.trim().toLowerCase();
+  const isDup=jobs.some(j=>j.jnum.toLowerCase()===val);
+  const warn=document.getElementById('dup-warn');
+  if(isDup&&val){this.classList.add('duplicate');warn.classList.add('show');}
+  else{this.classList.remove('duplicate');warn.classList.remove('show');}
+});
+function showStatus(msg,type){
+  const s=document.getElementById('status');
+  s.textContent=msg;s.className=`status-bar show ${type}`;
+  if(type==='success')setTimeout(()=>{s.className='status-bar';},3000);
+}
+document.getElementById('add-asset').addEventListener('click',()=>addRow());
+document.getElementById('add-job').addEventListener('click',async()=>{
+  const jnum=document.getElementById('jnum').value.trim();
+  const jdesc=document.getElementById('jdesc').value.trim();
+  const op=document.getElementById('op').value.trim()||'Unknown';
+  const notes=document.getElementById('notes').value.trim();
+  if(!jnum){alert('Please enter a job number.');return;}
+  const isDup=jobs.some(j=>j.jnum.toLowerCase()===jnum.toLowerCase());
+  if(isDup){const proceed=confirm(`⚠ Job #${jnum} was already logged today.\n\nAre you sure you want to save it again?`);if(!proceed)return;}
+  const rows=document.querySelectorAll('#asset-list .asset-row');
+  let assets=[];
+  rows.forEach(r=>{const type=r.querySelector('.type-sel').value;const code=r.querySelector('.code-f').value.trim();if(type)assets.push({type,code});});
+  if(!assets.length){alert('Add at least one asset.');return;}
+  let pfCount=0,thCount=0;
+  assets.forEach(a=>{if(a.type==='PF')pfCount++;else if(a.type==='TH')thCount++;else if(a.type==='BOTH'){pfCount++;thCount++;}});
+  const assetDetails=assets.map(a=>`${a.type}${a.code?':'+a.code:''}`).join(', ');
+  const btn=document.getElementById('add-job');
+  btn.disabled=true;btn.textContent='Saving...';
+  showStatus('Saving...','saving');
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  try{
+    const resp=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'art',jobNumber:jnum,description:jdesc,operator:op,assetCount:assets.length,productionFiles:pfCount,thumbnails:thCount,assetDetails,notes})});
+    const result=await resp.json();
+    if(!result.success)throw new Error(result.error);
+    jobs.push({jnum,jdesc,assets,pfCount,thCount,timeStr,notes});
+    renderList();updateSummary();resetForm();
+    showStatus('✓ Job saved successfully','success');
+  }catch(e){showStatus('❌ Error saving. Try again.','error');}
+  btn.disabled=false;btn.textContent='Upload Complete';
+});
+function renderList(){
+  const tb=document.getElementById('job-list');
+  if(!jobs.length){tb.innerHTML='<tr><td colspan="6" class="empty">No jobs entered yet.</td></tr>';return;}
+  tb.innerHTML=jobs.map(j=>`<tr><td style="font-weight:600;color:var(--blue-dark)">${j.jnum}</td><td>${j.jdesc||'—'}</td><td>${j.assets.map(a=>`<span class="badge ${a.type==='PF'?'bpf':a.type==='TH'?'bth':'bbo'}">${a.type}${a.code?' · '+a.code:''}</span>`).join(' ')}</td><td style="text-align:right;font-weight:600">${j.assets.length}</td><td style="color:var(--muted);font-size:11px">${j.timeStr}</td><td style="color:var(--muted)">${j.notes||'—'}</td></tr>`).join('');
+}
+function updateSummary(){
+  const tA=jobs.reduce((a,j)=>a+j.assets.length,0),tPF=jobs.reduce((a,j)=>a+j.pfCount,0),tTH=jobs.reduce((a,j)=>a+j.thCount,0);
+  document.getElementById('s-jobs').textContent=jobs.length;
+  document.getElementById('s-assets').textContent=tA;
+  document.getElementById('s-pf').textContent=tPF;
+  document.getElementById('s-th').textContent=tTH;
+}
+function resetForm(){
+  document.getElementById('jnum').value='';document.getElementById('jdesc').value='';document.getElementById('notes').value='';
+  document.getElementById('jnum').classList.remove('duplicate');document.getElementById('dup-warn').classList.remove('show');
+  document.getElementById('asset-list').innerHTML='';assetCount=0;addRow();
+}
+addRow();
+</script>
+</body>
+</html>
