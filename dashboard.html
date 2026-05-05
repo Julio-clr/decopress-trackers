@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DecoPress — Manager Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Inter:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--bg:#F4F7FF;--card:#fff;--border:#E0E4EE;--text:#1A1D23;--muted:#6B7280;--teal:#0F6E56;--amber:#BA7517;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.06)}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+.header{background:var(--blue);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,0.3)}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{background:#fff;color:var(--blue);font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:5px 10px;border-radius:6px}
+.header h1{font-family:'Montserrat',sans-serif;font-size:15px;font-weight:600;color:#fff}
+.header-right{display:flex;align-items:center;gap:10px}
+.toggle-group{display:flex;background:rgba(255,255,255,0.15);border-radius:7px;padding:2px;gap:2px}
+.toggle-btn{background:none;border:none;color:rgba(255,255,255,0.7);font-size:11px;padding:5px 12px;border-radius:5px;cursor:pointer;font-weight:500;font-family:'Inter',sans-serif}
+.toggle-btn.active{background:#fff;color:var(--blue)}
+.date-label{font-size:11px;color:rgba(255,255,255,0.7)}
+.refresh-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 10px;font-size:11px;color:#fff;cursor:pointer;font-family:'Inter',sans-serif}
+.refresh-btn:hover{background:rgba(255,255,255,0.25)}
+.loading{text-align:center;padding:60px;color:var(--muted);font-size:13px}
+.main{max-width:960px;margin:0 auto;padding:20px 16px}
+.section{margin-bottom:16px}
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-coral{background:#D85A30}.dot-blue{background:#185FA5}.dot-teal{background:#1D9E75}.dot-amber{background:#BA7517}.dot-gray{background:#888}
+.section-title{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:var(--text)}
+.section-sub{font-size:11px;color:var(--muted)}
+.metrics-row{display:grid;gap:8px}
+.cols-4{grid-template-columns:repeat(4,1fr)}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.cols-6{grid-template-columns:repeat(6,1fr)}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.metric-label{font-size:10px;font-weight:500;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.metric-value{font-size:20px;font-weight:700;color:var(--text);font-family:'Montserrat',sans-serif}
+.metric-value.blue{color:var(--blue)}
+.metric-value.teal{color:var(--teal)}
+.metric-value.amber{color:var(--amber)}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.divider-line{border:none;border-top:1px solid var(--border);margin:16px 0}
+.placeholder{background:var(--card);border:1px dashed var(--border);border-radius:var(--radius);padding:16px;text-align:center;font-size:11px;color:var(--muted)}
+.laser-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.lcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow)}
+.ltype{font-size:10px;font-weight:600;margin-bottom:6px}
+.lcount{font-size:20px;font-weight:700;color:var(--blue);font-family:'Montserrat',sans-serif}
+.lrev{font-size:10px;color:var(--muted);margin-top:2px}
+.qc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.qc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.qc-title{font-size:10px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.qc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.qc-row span:first-child{color:var(--muted)}
+.qc-row span:last-child{font-weight:500}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;margin-right:3px}
+.bF{background:#E6F1FB;color:#0C447C}.bE{background:#E1F5EE;color:#085041}.b3D{background:#EEEDFE;color:#3C3489}.bECO{background:#F1EFE8;color:#444}.bDTF{background:#EAF3DE;color:#27500A}.bEMBCUT{background:#FBEAF0;color:#72243E}.bEMBBRD{background:#FAEEDA;color:#633806}.bSET{background:#FAECE7;color:#712B13}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <div class="logo">DP</div>
+    <h1>Patch Department Dashboard</h1>
+  </div>
+  <div class="header-right">
+    <div class="toggle-group">
+      <button class="toggle-btn active" onclick="setRange('today',this)">Today</button>
+      <button class="toggle-btn" onclick="setRange('week',this)">This Week</button>
+      <button class="toggle-btn" onclick="setRange('month',this)">This Month</button>
+    </div>
+    <span class="date-label" id="date-label"></span>
+    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="main" id="main-content">
+  <div class="loading">Loading dashboard data...</div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyb-kBmua6rAqtAksCRrt-5cw2l79XyLFVlXGOQJTUwXHovBx65kzrXCS9aZCVWGdo0aw/exec';
+let currentRange = 'today';
+let allData = { production: [], qc: [], art: [] };
+
+const DATE_LABELS = {
+  today: new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}),
+  week: 'This Week',
+  month: new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'})
+};
+
+document.getElementById('date-label').textContent = DATE_LABELS['today'];
+
+async function fetchData(type, range) {
+  const resp = await fetch(`${SCRIPT_URL}?type=${type}&range=${range}`);
+  const result = await resp.json();
+  return result.success ? result.data : [];
+}
+
+async function loadAll() {
+  document.getElementById('main-content').innerHTML = '<div class="loading">Loading dashboard data...</div>';
+  try {
+    const [prod, qc, art] = await Promise.all([
+      fetchData('production', currentRange),
+      fetchData('qc', currentRange),
+      fetchData('art', currentRange)
+    ]);
+    allData = { production: prod, qc, art };
+    renderDashboard();
+  } catch(e) {
+    document.getElementById('main-content').innerHTML = '<div class="loading">Error loading data. Check your connection and try refreshing.</div>';
+  }
+}
+
+function setRange(range, btn) {
+  currentRange = range;
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('date-label').textContent = DATE_LABELS[range];
+  loadAll();
+}
+
+function calcProd() {
+  const d = allData.production;
+  const byType = {};
+  d.forEach(r => {
+    const t = r.PatchType || '';
+    if (!byType[t]) byType[t] = { count: 0, rev: 0 };
+    byType[t].count += Number(r.Quantity) || 0;
+    byType[t].rev += Number(r.TotalRevenue) || 0;
+  });
+  return byType;
+}
+
+function calcArt() {
+  const d = allData.art;
+  return {
+    jobs: d.length,
+    assets: d.reduce((a,r) => a + (Number(r.AssetCount)||0), 0),
+    pf: d.reduce((a,r) => a + (Number(r.ProductionFiles)||0), 0),
+    th: d.reduce((a,r) => a + (Number(r.Thumbnails)||0), 0)
+  };
+}
+
+function calcQC() {
+  const d = allData.qc;
+  const ps = d.filter(r => r.JobType === 'PS');
+  const pa = d.filter(r => r.JobType === 'PA');
+  const totalPieces = d.reduce((a,r) => a + (Number(r.Quantity)||0), 0);
+  const totalRework = d.reduce((a,r) => a + (Number(r.ReworkQty)||0), 0);
+  return {
+    ps: {
+      jobs: ps.length,
+      pieces: ps.reduce((a,r) => a + (Number(r.Quantity)||0), 0),
+      val: ps.reduce((a,r) => a + (Number(r.OrderValue)||0), 0),
+      ship: ps.reduce((a,r) => a + (Number(r.ShippingCost)||0), 0),
+      export: ps.reduce((a,r) => a + (Number(r.TrueExportValue)||0), 0)
+    },
+    pa: {
+      jobs: pa.length,
+      pieces: pa.reduce((a,r) => a + (Number(r.Quantity)||0), 0)
+    },
+    fi: {
+      jobs: d.filter(r => (Number(r.ReworkQty)||0) > 0).length,
+      pieces: totalRework,
+      rate: totalPieces > 0 ? (totalRework/totalPieces*100).toFixed(1)+'%' : '0%'
+    }
+  };
+}
+
+function renderDashboard() {
+  const art = calcArt();
+  const prod = calcProd();
+  const qc = calcQC();
+
+  const setJobs = allData.production.filter(r => r.PatchType === 'SET').length;
+  const setPieces = allData.production.filter(r => r.PatchType === 'SET').reduce((a,r) => a+(Number(r.Quantity)||0), 0);
+
+  const laserTypes = ['F','E','3D','ECO','DTF','EMB-CUT'];
+  const laserBadge = {'F':'bF','E':'bE','3D':'b3D','ECO':'bECO','DTF':'bDTF','EMB-CUT':'bEMBCUT'};
+
+  const embJobs = allData.production.filter(r => r.PatchType === 'EMB-BRD').length;
+  const embPieces = allData.production.filter(r => r.PatchType === 'EMB-BRD').reduce((a,r) => a+(Number(r.Quantity)||0), 0);
+  const embRev = allData.production.filter(r => r.PatchType === 'EMB-BRD').reduce((a,r) => a+(Number(r.TotalRevenue)||0), 0);
+
+  document.getElementById('main-content').innerHTML = `
+
+    <div class="section">
+      <div class="section-header"><div class="dot dot-coral"></div><span class="section-title">Art & Files</span><span class="section-sub">Jerome</span></div>
+      <div class="metrics-row cols-4">
+        <div class="metric"><div class="metric-label">Jobs Processed</div><div class="metric-value blue">${art.jobs}</div></div>
+        <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value blue">${art.assets}</div></div>
+        <div class="metric"><div class="metric-label">Prod. Files Uploaded</div><div class="metric-value teal">${art.pf}</div></div>
+        <div class="metric"><div class="metric-label">Thumbnails Created</div><div class="metric-value teal">${art.th}</div></div>
+      </div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header"><div class="dot dot-blue"></div><span class="section-title">Print & Setup</span><span class="section-sub">Gerry</span></div>
+      <div class="metrics-row cols-3">
+        <div class="metric"><div class="metric-label">Jobs Set Up</div><div class="metric-value blue">${setJobs}</div><div class="metric-sub"><span class="badge bSET">SET</span></div></div>
+        <div class="metric"><div class="metric-label">Total Pieces</div><div class="metric-value blue">${setPieces.toLocaleString()}</div></div>
+        <div class="metric"><div class="metric-label">Revenue</div><div class="metric-value blue">$0.00</div><div class="metric-sub">WIP — not yet complete</div></div>
+      </div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header"><div class="dot dot-gray"></div><span class="section-title">Sublimation & Lamination</span><span class="section-sub" style="font-style:italic">coming soon</span></div>
+      <div class="placeholder">Tracker for this role is in progress — will appear here once active.</div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header"><div class="dot dot-blue"></div><span class="section-title">Laser Output</span><span class="section-sub">Will + Gerry</span></div>
+      <div class="laser-grid">
+        ${laserTypes.map(t => {
+          const cnt = (prod[t]?.count || 0);
+          const rev = (prod[t]?.rev || 0);
+          return `<div class="lcard"><div class="ltype"><span class="badge ${laserBadge[t]}">${t}</span></div><div class="lcount">${cnt.toLocaleString()}</div><div class="lrev">$${rev.toFixed(2)}</div></div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header"><div class="dot dot-amber"></div><span class="section-title">EMB Output</span><span class="section-sub">Gerry</span></div>
+      <div class="metrics-row cols-3">
+        <div class="metric"><div class="metric-label">EMB Border Jobs</div><div class="metric-value amber">${embJobs}</div><div class="metric-sub"><span class="badge bEMBBRD">EMB-BRD</span></div></div>
+        <div class="metric"><div class="metric-label">Total Pieces</div><div class="metric-value amber">${embPieces.toLocaleString()}</div></div>
+        <div class="metric"><div class="metric-label">Revenue</div><div class="metric-value amber">$${embRev.toFixed(2)}</div></div>
+      </div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header"><div class="dot dot-teal"></div><span class="section-title">QC & Shipping</span><span class="section-sub">Norith</span></div>
+      <div class="qc-grid">
+        <div class="qc-card">
+          <div class="qc-title">Patch Supply</div>
+          <div class="qc-row"><span>Jobs</span><span>${qc.ps.jobs}</span></div>
+          <div class="qc-row"><span>Pieces shipped</span><span>${qc.ps.pieces.toLocaleString()}</span></div>
+          <div class="qc-row"><span>Order value</span><span>$${qc.ps.val.toFixed(2)}</span></div>
+          <div class="qc-row"><span>Shipping deducted</span><span style="color:var(--amber)">-$${qc.ps.ship.toFixed(2)}</span></div>
+          <div class="qc-row" style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px"><span style="font-weight:600">True export</span><span style="color:var(--teal);font-weight:700">$${qc.ps.export.toFixed(2)}</span></div>
+        </div>
+        <div class="qc-card">
+          <div class="qc-title">Patch Apply</div>
+          <div class="qc-row"><span>Jobs</span><span>${qc.pa.jobs}</span></div>
+          <div class="qc-row"><span>Pieces in-house</span><span>${qc.pa.pieces.toLocaleString()}</span></div>
+          <div class="qc-row"><span>Revenue</span><span style="color:var(--muted);font-size:11px">n/a</span></div>
+        </div>
+        <div class="qc-card">
+          <div class="qc-title">Fill-ins</div>
+          <div class="qc-row"><span>Jobs with rework</span><span style="color:var(--amber)">${qc.fi.jobs}</span></div>
+          <div class="qc-row"><span>Pieces to remake</span><span style="color:var(--amber)">${qc.fi.pieces}</span></div>
+          <div class="qc-row"><span>Rework rate</span><span style="color:var(--amber)">${qc.fi.rate}</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+loadAll();
+</script>
+</body>
+</html>
