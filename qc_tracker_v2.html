@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DecoPress — QC & Shipping Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Inter:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--bg:#F4F7FF;--card:#fff;--border:#E0E4EE;--text:#1A1D23;--muted:#6B7280;--teal:#0F6E56;--amber:#BA7517;--danger:#E24B4A;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.06)}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+.header{background:var(--blue);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,0.3)}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{background:#fff;color:var(--blue);font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:5px 10px;border-radius:6px}
+.header h1{font-family:'Montserrat',sans-serif;font-size:15px;font-weight:600;color:#fff}
+.header-right{display:flex;align-items:center;gap:12px}
+.op-label{font-size:12px;color:rgba(255,255,255,0.7)}
+.op-select{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 10px;font-size:12px;color:#fff;width:160px;font-family:'Inter',sans-serif}
+.op-select option{color:var(--text);background:#fff}
+.date-badge{font-size:11px;color:rgba(255,255,255,0.7)}
+.status-bar{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;transition:height .2s}
+.status-bar.show{height:36px}
+.status-bar.success{background:#D1FAE5;color:#065F46}
+.status-bar.error{background:#FEE2E2;color:#991B1B}
+.status-bar.saving{background:#EFF6FF;color:var(--blue)}
+.main{max-width:900px;margin:0 auto;padding:20px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'';width:3px;height:14px;background:var(--blue);border-radius:2px;display:inline-block}
+.form-grid{display:grid;grid-template-columns:1fr 2fr 90px 110px 100px 80px;gap:8px;margin-bottom:10px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:500;color:var(--muted)}
+.field input,.field select{font-size:12px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:#FAFBFF;color:var(--text);font-family:'Inter',sans-serif;width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue)}
+.field input.duplicate{border-color:var(--amber);background:#FFFBEB}
+.bottom-row{display:grid;grid-template-columns:120px 1fr;gap:8px;margin-bottom:10px;align-items:end}
+.ship-wrap{transition:opacity .2s}
+.ship-wrap.hidden{opacity:0;pointer-events:none}
+.divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+.form-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dup-warning{font-size:11px;color:var(--amber);font-weight:500;display:none}
+.dup-warning.show{display:block}
+.add-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
+.add-btn:hover{background:var(--blue-dark)}
+.summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow)}
+.metric-label{font-size:10px;font-weight:500;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.metric-value{font-size:18px;font-weight:700;color:var(--blue);font-family:'Montserrat',sans-serif}
+.metric-value.warn{color:var(--amber)}
+.breakdown-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.bc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;box-shadow:var(--shadow)}
+.bc-title{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em}
+.bc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.bc-row span:first-child{color:var(--muted)}
+.bc-row span:last-child{font-weight:500}
+.job-table{width:100%;border-collapse:collapse;font-size:11px}
+.job-table th{font-size:10px;font-weight:600;color:var(--muted);text-align:left;padding:6px 7px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
+.job-table td{padding:7px 7px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.job-table tr:last-child td{border-bottom:none}
+.empty{text-align:center;padding:24px;color:var(--muted);font-size:12px}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600}
+.bps{background:#E6F1FB;color:#0C447C}.bpa{background:#E1F5EE;color:#085041}
+.rw{color:var(--amber);font-weight:600}
+.save-all-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:14px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between}
+.save-all-info{font-size:12px;color:var(--muted)}
+.save-all-info strong{color:var(--text);font-weight:600}
+.save-all-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
+.save-all-btn:hover{background:#0A5A46}
+.save-all-btn:disabled{background:#9DB8D9;cursor:not-allowed}
+.unsaved-dot{display:inline-block;width:7px;height:7px;background:var(--amber);border-radius:50%;margin-right:5px}
+.del-job-btn{width:24px;height:24px;border:1px solid var(--border);background:none;border-radius:5px;cursor:pointer;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.del-job-btn:hover{border-color:var(--danger);color:var(--danger);background:#FEF2F2}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <div class="logo">DP</div>
+    <h1>QC / Shipping Tracker</h1>
+  </div>
+  <div class="header-right">
+    <span class="op-label">Operator:</span>
+    <select class="op-select" id="op"><option value="">Loading...</option></select>
+    <span class="date-badge" id="date-disp"></span>
+  </div>
+</div>
+<div class="status-bar" id="status"></div>
+<div class="main">
+  <div class="card">
+    <div class="card-title">Quick QC Entry</div>
+    <div class="form-grid">
+      <div class="field"><label>Job Number</label><input type="text" id="jnum" placeholder="e.g. 10482" autocomplete="off"></div>
+      <div class="field"><label>Description</label><input type="text" id="jdesc" placeholder="e.g. Acme Corp"></div>
+      <div class="field"><label>Qty</label><input type="number" id="qty" placeholder="0" min="0" style="text-align:right"></div>
+      <div class="field"><label>Order Value</label><input type="number" id="oval" placeholder="0.00" min="0" step="0.01" style="text-align:right"></div>
+      <div class="field"><label>Type</label><select id="jtype"><option value="">Select...</option><option value="PS">Patch supply</option><option value="PA">Patch apply</option></select></div>
+      <div class="field"><label>Rework Qty</label><input type="number" id="rework" placeholder="0" min="0" style="text-align:right"></div>
+    </div>
+    <div class="bottom-row">
+      <div class="field ship-wrap hidden" id="ship-wrap"><label>Shipping Cost</label><input type="number" id="ship" placeholder="0.00" min="0" step="0.01" style="text-align:right"></div>
+      <div class="field"><label>QC Notes</label><input type="text" id="qcnotes" placeholder="Optional notes..."></div>
+    </div>
+    <div class="divider"></div>
+    <div class="form-bottom">
+      <span class="dup-warning" id="dup-warn">⚠ This job number was already added today.</span>
+      <button class="add-btn" id="add-job">Add Job</button>
+    </div>
+  </div>
+  <div class="summary-grid">
+    <div class="metric"><div class="metric-label">Jobs Added</div><div class="metric-value" id="s-jobs">0</div></div>
+    <div class="metric"><div class="metric-label">Total Pieces</div><div class="metric-value" id="s-pieces">0</div></div>
+    <div class="metric"><div class="metric-label">Rework Pieces</div><div class="metric-value warn" id="s-rework">0</div></div>
+    <div class="metric"><div class="metric-label">True Export Value</div><div class="metric-value" id="s-export">$0.00</div></div>
+    <div class="metric"><div class="metric-label">Rework Rate</div><div class="metric-value warn" id="s-rate">0%</div></div>
+  </div>
+  <div class="breakdown-grid">
+    <div class="bc">
+      <div class="bc-title">Patch Supply</div>
+      <div class="bc-row"><span>Jobs</span><span id="ps-jobs">0</span></div>
+      <div class="bc-row"><span>Pieces shipped</span><span id="ps-pieces">0</span></div>
+      <div class="bc-row"><span>Order value</span><span id="ps-val">$0.00</span></div>
+      <div class="bc-row"><span>Shipping deducted</span><span id="ps-ship" style="color:var(--amber)">$0.00</span></div>
+      <div class="bc-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><span style="font-weight:600">True export</span><span id="ps-export" style="color:var(--teal);font-weight:700">$0.00</span></div>
+    </div>
+    <div class="bc">
+      <div class="bc-title">Patch Apply</div>
+      <div class="bc-row"><span>Jobs</span><span id="pa-jobs">0</span></div>
+      <div class="bc-row"><span>Pieces in-house</span><span id="pa-pieces">0</span></div>
+      <div class="bc-row"><span>Revenue</span><span style="color:var(--muted);font-size:11px">n/a</span></div>
+    </div>
+    <div class="bc">
+      <div class="bc-title">Fill-ins</div>
+      <div class="bc-row"><span>Jobs with rework</span><span id="fi-jobs" style="color:var(--amber)">0</span></div>
+      <div class="bc-row"><span>Pieces to remake</span><span id="fi-pieces" style="color:var(--amber)">0</span></div>
+      <div class="bc-row"><span>Rework rate</span><span id="fi-rate" style="color:var(--amber)">0%</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Today's Job List</div>
+    <table class="job-table">
+      <thead><tr><th>Job #</th><th>Description</th><th>Type</th><th style="text-align:right">Qty</th><th style="text-align:right">Order Value</th><th style="text-align:right">Shipping</th><th style="text-align:right">True Export</th><th style="text-align:right">Rework</th><th>Notes</th><th>Time</th><th>Status</th><th></th></tr></thead>
+      <tbody id="job-list"><tr><td colspan="12" class="empty">No jobs added yet.</td></tr></tbody>
+    </table>
+  </div>
+  <div class="save-all-bar" id="save-all-bar" style="display:none">
+    <div class="save-all-info"><span class="unsaved-dot"></span><strong id="unsaved-count">0</strong> jobs ready to save</div>
+    <button class="save-all-btn" id="save-all-btn">Save All to Sheet</button>
+  </div>
+</div>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyb-kBmua6rAqtAksCRrt-5cw2l79XyLFVlXGOQJTUwXHovBx65kzrXCS9aZCVWGdo0aw/exec';
+let jobs=[];
+document.getElementById('date-disp').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+async function loadOperators(){
+  try{
+    const resp=await fetch(`${SCRIPT_URL}?type=operators`);
+    const result=await resp.json();
+    const sel=document.getElementById('op');
+    sel.innerHTML='<option value="">Select your name...</option>';
+    if(result.success){result.data.forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o);});}
+  }catch(e){document.getElementById('op').innerHTML='<option value="">Select your name...</option>';}
+}
+loadOperators();
+
+document.getElementById('jtype').addEventListener('change',function(){
+  const w=document.getElementById('ship-wrap');
+  if(this.value==='PS')w.classList.remove('hidden');
+  else{w.classList.add('hidden');document.getElementById('ship').value='';}
+});
+
+document.getElementById('jnum').addEventListener('input',function(){
+  const val=this.value.trim().toLowerCase();
+  const isDup=jobs.some(j=>j.jnum.toLowerCase()===val);
+  const warn=document.getElementById('dup-warn');
+  if(isDup&&val){this.classList.add('duplicate');warn.classList.add('show');}
+  else{this.classList.remove('duplicate');warn.classList.remove('show');}
+});
+
+function showStatus(msg,type){
+  const s=document.getElementById('status');
+  s.textContent=msg;s.className=`status-bar show ${type}`;
+  if(type==='success')setTimeout(()=>{s.className='status-bar';},4000);
+}
+
+document.getElementById('add-job').addEventListener('click',()=>{
+  const jnum=document.getElementById('jnum').value.trim();
+  const jdesc=document.getElementById('jdesc').value.trim();
+  const op=document.getElementById('op').value;
+  const qty=parseFloat(document.getElementById('qty').value)||0;
+  const oval=parseFloat(document.getElementById('oval').value)||0;
+  const jtype=document.getElementById('jtype').value;
+  const rework=parseFloat(document.getElementById('rework').value)||0;
+  const ship=jtype==='PS'?(parseFloat(document.getElementById('ship').value)||0):0;
+  const qcnotes=document.getElementById('qcnotes').value.trim();
+  if(!op){alert('Please select your name before adding a job.');return;}
+  if(!jnum){alert('Please enter a job number.');return;}
+  if(!jtype){alert('Please select a type.');return;}
+  if(!qty){alert('Please enter a quantity.');return;}
+  const isDup=jobs.some(j=>j.jnum.toLowerCase()===jnum.toLowerCase());
+  if(isDup){const proceed=confirm(`⚠ Job #${jnum} was already added today.\n\nAdd it again?`);if(!proceed)return;}
+  const trueExport=jtype==='PS'?oval-ship:0;
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  jobs.push({id:Date.now(),jnum,jdesc,op,jtype,qty,oval,ship,trueExport,rework,qcnotes,timeStr,saved:false,timestamp:now.toISOString()});
+  renderAll();updateSaveBar();resetForm();
+});
+
+document.getElementById('save-all-btn').addEventListener('click',async()=>{
+  const op=document.getElementById('op').value;
+  if(!op){alert('Please select your name before saving.');return;}
+  const unsaved=jobs.filter(j=>!j.saved);
+  if(!unsaved.length)return;
+  const btn=document.getElementById('save-all-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+  showStatus(`Saving ${unsaved.length} jobs to Google Sheets...`,'saving');
+  let allSaved=true;
+  for(const job of unsaved){
+    try{
+      const resp=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'qc',jobNumber:job.jnum,description:job.jdesc,operator:job.op,jobType:job.jtype,quantity:job.qty,orderValue:job.oval,shippingCost:job.ship,trueExportValue:job.trueExport,reworkQty:job.rework,qcNotes:job.qcnotes,date:job.timestamp})});
+      const result=await resp.json();
+      if(!result.success)throw new Error(result.error);
+      job.saved=true;
+    }catch(e){allSaved=false;break;}
+  }
+  if(allSaved){renderAll();updateSaveBar();showStatus('✓ All jobs saved to Google Sheets','success');}
+  else{showStatus('❌ Error saving. Try again.','error');}
+  btn.disabled=false;btn.textContent='Save All to Sheet';
+});
+
+function removeJob(id){
+  if(!confirm('Remove this job from the list?'))return;
+  jobs=jobs.filter(j=>j.id!==id);
+  renderAll();updateSaveBar();
+}
+
+function updateSaveBar(){
+  const unsaved=jobs.filter(j=>!j.saved);
+  const bar=document.getElementById('save-all-bar');
+  if(unsaved.length>0){bar.style.display='flex';document.getElementById('unsaved-count').textContent=unsaved.length;}
+  else{bar.style.display='none';}
+}
+
+function renderAll(){
+  const tb=document.getElementById('job-list');
+  if(!jobs.length){tb.innerHTML='<tr><td colspan="12" class="empty">No jobs added yet.</td></tr>';return;}
+  tb.innerHTML=jobs.map(j=>`<tr>
+    <td style="font-weight:600;color:var(--blue-dark)">${j.jnum}</td>
+    <td>${j.jdesc||'—'}</td>
+    <td><span class="badge ${j.jtype==='PS'?'bps':'bpa'}">${j.jtype==='PS'?'Patch supply':'Patch apply'}</span></td>
+    <td style="text-align:right">${j.qty}</td>
+    <td style="text-align:right">${j.oval>0?'$'+j.oval.toFixed(2):'—'}</td>
+    <td style="text-align:right">${j.ship>0?'$'+j.ship.toFixed(2):'—'}</td>
+    <td style="text-align:right">${j.trueExport>0?'$'+j.trueExport.toFixed(2):'—'}</td>
+    <td style="text-align:right">${j.rework>0?`<span class="rw">${j.rework}</span>`:'—'}</td>
+    <td style="color:var(--muted);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${j.qcnotes||''}">${j.qcnotes||'—'}</td>
+    <td style="color:var(--muted);font-size:11px">${j.timeStr}</td>
+    <td>${j.saved?'<span style="font-size:11px;color:var(--teal)">✓ Saved</span>':'<span style="font-size:11px;color:var(--amber)">● Unsaved</span>'}</td>
+    <td><button class="del-job-btn" onclick="removeJob(${j.id})" title="Remove job">×</button></td>
+  </tr>`).join('');
+  const tJ=jobs.length,tP=jobs.reduce((a,j)=>a+j.qty,0),tR=jobs.reduce((a,j)=>a+j.rework,0),tE=jobs.reduce((a,j)=>a+j.trueExport,0);
+  document.getElementById('s-jobs').textContent=tJ;
+  document.getElementById('s-pieces').textContent=tP;
+  document.getElementById('s-rework').textContent=tR;
+  document.getElementById('s-export').textContent='$'+tE.toFixed(2);
+  document.getElementById('s-rate').textContent=tP>0?Math.round(tR/tP*100)+'%':'0%';
+  const ps=jobs.filter(j=>j.jtype==='PS'),pa=jobs.filter(j=>j.jtype==='PA');
+  document.getElementById('ps-jobs').textContent=ps.length;
+  document.getElementById('ps-pieces').textContent=ps.reduce((a,j)=>a+j.qty,0);
+  document.getElementById('ps-val').textContent='$'+ps.reduce((a,j)=>a+j.oval,0).toFixed(2);
+  document.getElementById('ps-ship').textContent='$'+ps.reduce((a,j)=>a+j.ship,0).toFixed(2);
+  document.getElementById('ps-export').textContent='$'+ps.reduce((a,j)=>a+j.trueExport,0).toFixed(2);
+  document.getElementById('pa-jobs').textContent=pa.length;
+  document.getElementById('pa-pieces').textContent=pa.reduce((a,j)=>a+j.qty,0);
+  const fiJ=jobs.filter(j=>j.rework>0);
+  document.getElementById('fi-jobs').textContent=fiJ.length;
+  document.getElementById('fi-pieces').textContent=jobs.reduce((a,j)=>a+j.rework,0);
+  document.getElementById('fi-rate').textContent=tP>0?Math.round(tR/tP*100)+'%':'0%';
+}
+
+function resetForm(){
+  ['jnum','jdesc','qty','oval','rework','ship','qcnotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('jtype').value='';
+  document.getElementById('ship-wrap').classList.add('hidden');
+  document.getElementById('jnum').classList.remove('duplicate');
+  document.getElementById('dup-warn').classList.remove('show');
+}
+</script>
+</body>
+</html>

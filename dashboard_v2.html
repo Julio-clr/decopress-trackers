@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DecoPress — Manager Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Inter:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--bg:#F4F7FF;--card:#fff;--border:#E0E4EE;--text:#1A1D23;--muted:#6B7280;--teal:#0F6E56;--amber:#BA7517;--danger:#E24B4A;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.06)}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+/* PIN */
+.pin-screen{position:fixed;inset:0;background:var(--blue);display:flex;align-items:center;justify-content:center;z-index:9999}
+.pin-box{background:#fff;border-radius:16px;padding:40px;text-align:center;width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
+.pin-logo{background:var(--blue);color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:5px 10px;border-radius:6px;display:inline-block;margin-bottom:20px}
+.pin-title{font-family:'Montserrat',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.pin-sub{font-size:12px;color:var(--muted);margin-bottom:24px}
+.pin-input{width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);font-size:16px;text-align:center;font-family:'Inter',sans-serif;letter-spacing:4px;outline:none;margin-bottom:8px}
+.pin-input:focus{border-color:var(--blue)}
+.pin-error{font-size:11px;color:var(--danger);margin-bottom:12px;height:16px}
+.pin-btn{width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
+.pin-btn:hover{background:var(--blue-dark)}
+/* HEADER */
+.header{background:var(--blue);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,0.3)}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo{background:#fff;color:var(--blue);font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;padding:4px 9px;border-radius:6px}
+.header h1{font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;color:#fff}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.toggle-group{display:flex;background:rgba(255,255,255,0.15);border-radius:7px;padding:2px;gap:2px}
+.toggle-btn{background:none;border:none;color:rgba(255,255,255,0.7);font-size:11px;padding:4px 9px;border-radius:5px;cursor:pointer;font-weight:500;font-family:'Inter',sans-serif;white-space:nowrap}
+.toggle-btn.active{background:#fff;color:var(--blue)}
+.date-label{font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap}
+.refresh-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:4px 9px;font-size:11px;color:#fff;cursor:pointer;font-family:'Inter',sans-serif}
+/* MAIN */
+.main{max-width:960px;margin:0 auto;padding:16px}
+.loading{text-align:center;padding:60px;color:var(--muted);font-size:13px}
+.section{margin-bottom:14px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.section-header-left{display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-coral{background:#D85A30}.dot-blue{background:#185FA5}.dot-teal{background:#1D9E75}.dot-amber{background:#BA7517}.dot-gray{background:#888}
+.section-title{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:var(--text)}
+.section-sub{font-size:11px;color:var(--muted)}
+.expand-btn{font-size:11px;color:var(--blue);background:none;border:1px solid var(--blue-light);border-radius:6px;padding:3px 10px;cursor:pointer;font-family:'Inter',sans-serif}
+.expand-btn:hover{background:var(--blue-light)}
+.metrics-row{display:grid;gap:8px}
+.cols-4{grid-template-columns:repeat(4,1fr)}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow)}
+.metric-label{font-size:10px;font-weight:500;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.metric-value{font-size:18px;font-weight:700;color:var(--text);font-family:'Montserrat',sans-serif}
+.metric-value.blue{color:var(--blue)}.metric-value.teal{color:var(--teal)}.metric-value.amber{color:var(--amber)}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.divider-line{border:none;border-top:1px solid var(--border);margin:14px 0}
+.placeholder{background:var(--card);border:1px dashed var(--border);border-radius:var(--radius);padding:14px;text-align:center;font-size:11px;color:var(--muted)}
+.laser-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.lcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:9px 11px;box-shadow:var(--shadow)}
+.ltype{font-size:10px;font-weight:600;margin-bottom:5px}
+.lcount{font-size:18px;font-weight:700;color:var(--blue);font-family:'Montserrat',sans-serif}
+.lrev{font-size:10px;color:var(--muted);margin-top:2px}
+.qc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.qc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow)}
+.qc-title{font-size:10px;font-weight:600;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em}
+.qc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.qc-row span:first-child{color:var(--muted)}
+.qc-row span:last-child{font-weight:500}
+.badge{display:inline-block;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600;margin-right:2px}
+.bF{background:#E6F1FB;color:#0C447C}.bE{background:#E1F5EE;color:#085041}.b3D{background:#EEEDFE;color:#3C3489}.bECO{background:#F1EFE8;color:#444}.bDTF{background:#EAF3DE;color:#27500A}.bEMBCUT{background:#FBEAF0;color:#72243E}.bEMBBRD{background:#FAEEDA;color:#633806}.bSET{background:#FAECE7;color:#712B13}
+/* DRILL DOWN */
+.drill-panel{display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-top:8px;box-shadow:var(--shadow)}
+.drill-panel.open{display:block}
+.drill-table{width:100%;border-collapse:collapse;font-size:11px}
+.drill-table th{font-size:10px;font-weight:600;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
+.drill-table td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+.drill-table tr:last-child td{border-bottom:none}
+.drill-empty{text-align:center;padding:16px;color:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="pin-screen" id="pin-screen">
+  <div class="pin-box">
+    <div class="pin-logo">DP</div>
+    <div class="pin-title">Manager Dashboard</div>
+    <div class="pin-sub">Enter your PIN to continue</div>
+    <input type="password" class="pin-input" id="pin-input" placeholder="Enter PIN" maxlength="10">
+    <div class="pin-error" id="pin-error"></div>
+    <button class="pin-btn" onclick="checkPin()">Unlock</button>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">DP</div>
+    <h1>Patch Department Dashboard</h1>
+  </div>
+  <div class="header-right">
+    <div class="toggle-group">
+      <button class="toggle-btn active" onclick="setRange('today',this)">Today</button>
+      <button class="toggle-btn" onclick="setRange('yesterday',this)">Yesterday</button>
+      <button class="toggle-btn" onclick="setRange('thisweek',this)">This Week</button>
+      <button class="toggle-btn" onclick="setRange('lastweek',this)">Last Week</button>
+      <button class="toggle-btn" onclick="setRange('thismonth',this)">This Month</button>
+      <button class="toggle-btn" onclick="setRange('lastmonth',this)">Last Month</button>
+    </div>
+    <span class="date-label" id="date-label"></span>
+    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="main" id="main-content">
+  <div class="loading">Enter PIN to load dashboard.</div>
+</div>
+
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyb-kBmua6rAqtAksCRrt-5cw2l79XyLFVlXGOQJTUwXHovBx65kzrXCS9aZCVWGdo0aw/exec';
+let currentRange='today';
+let allData={production:[],qc:[],art:[]};
+let openDrills={};
+
+// PIN
+function checkPin(){
+  const pin=document.getElementById('pin-input').value;
+  if(pin==='16918'){
+    document.getElementById('pin-screen').style.display='none';
+    loadAll();
+  } else {
+    document.getElementById('pin-error').textContent='Incorrect PIN. Try again.';
+    document.getElementById('pin-input').value='';
+  }
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&document.getElementById('pin-screen').style.display!=='none')checkPin();
+});
+
+// DATE LABELS
+function getDateLabel(range){
+  const now=new Date();
+  const fmt=(d)=>d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  if(range==='today')return fmt(today);
+  if(range==='yesterday'){const y=new Date(today.getTime()-86400000);return fmt(y);}
+  if(range==='thisweek'){const ws=new Date(today.getTime()-today.getDay()*86400000);return fmt(ws)+' — '+fmt(today);}
+  if(range==='lastweek'){const ws=new Date(today.getTime()-today.getDay()*86400000);const lws=new Date(ws.getTime()-7*86400000);return fmt(lws)+' — '+fmt(new Date(ws.getTime()-86400000));}
+  if(range==='thismonth')return now.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  if(range==='lastmonth'){const lm=new Date(now.getFullYear(),now.getMonth()-1,1);return lm.toLocaleDateString('en-US',{month:'long',year:'numeric'});}
+  return '';
+}
+
+async function fetchData(type,range){
+  const resp=await fetch(`${SCRIPT_URL}?type=${type}&range=${range}`);
+  const result=await resp.json();
+  return result.success?result.data:[];
+}
+
+async function loadAll(){
+  document.getElementById('main-content').innerHTML='<div class="loading">Loading dashboard data...</div>';
+  openDrills={};
+  try{
+    const [prod,qc,art]=await Promise.all([fetchData('production',currentRange),fetchData('qc',currentRange),fetchData('art',currentRange)]);
+    allData={production:prod,qc,art};
+    renderDashboard();
+  }catch(e){
+    document.getElementById('main-content').innerHTML='<div class="loading">Error loading data. Check your connection and try refreshing.</div>';
+  }
+}
+
+function setRange(range,btn){
+  currentRange=range;
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('date-label').textContent=getDateLabel(range);
+  loadAll();
+}
+
+function toggleDrill(id){
+  const panel=document.getElementById(id);
+  if(!panel)return;
+  const isOpen=panel.classList.contains('open');
+  panel.classList.toggle('open',!isOpen);
+  const btn=document.querySelector(`[data-drill="${id}"]`);
+  if(btn)btn.textContent=isOpen?'▼ Details':'▲ Hide';
+}
+
+function drillTable(rows,cols){
+  if(!rows.length)return`<div class="drill-empty">No data for this period.</div>`;
+  return`<table class="drill-table"><thead><tr>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${r[c.key]??'—'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+
+function calcProd(){
+  const byType={};
+  allData.production.forEach(r=>{
+    const t=r.PatchType||'';
+    if(!byType[t])byType[t]={count:0,rev:0};
+    byType[t].count+=Number(r.Quantity)||0;
+    byType[t].rev+=Number(r.TotalRevenue)||0;
+  });
+  return byType;
+}
+
+function calcArt(){
+  const d=allData.art;
+  return{jobs:d.length,assets:d.reduce((a,r)=>a+(Number(r.AssetCount)||0),0),pf:d.reduce((a,r)=>a+(Number(r.ProductionFiles)||0),0),th:d.reduce((a,r)=>a+(Number(r.Thumbnails)||0),0)};
+}
+
+function calcQC(){
+  const d=allData.qc;
+  const ps=d.filter(r=>r.JobType==='PS');
+  const pa=d.filter(r=>r.JobType==='PA');
+  const tP=d.reduce((a,r)=>a+(Number(r.Quantity)||0),0);
+  const tR=d.reduce((a,r)=>a+(Number(r.ReworkQty)||0),0);
+  return{
+    ps:{jobs:ps.length,pieces:ps.reduce((a,r)=>a+(Number(r.Quantity)||0),0),val:ps.reduce((a,r)=>a+(Number(r.OrderValue)||0),0),ship:ps.reduce((a,r)=>a+(Number(r.ShippingCost)||0),0),export:ps.reduce((a,r)=>a+(Number(r.TrueExportValue)||0),0)},
+    pa:{jobs:pa.length,pieces:pa.reduce((a,r)=>a+(Number(r.Quantity)||0),0)},
+    fi:{jobs:d.filter(r=>(Number(r.ReworkQty)||0)>0).length,pieces:tR,rate:tP>0?(tR/tP*100).toFixed(1)+'%':'0%'}
+  };
+}
+
+function renderDashboard(){
+  document.getElementById('date-label').textContent=getDateLabel(currentRange);
+  const art=calcArt();
+  const prod=calcProd();
+  const qc=calcQC();
+  const laserTypes=['F','E','3D','ECO','DTF','EMB-CUT'];
+  const laserBadge={'F':'bF','E':'bE','3D':'b3D','ECO':'bECO','DTF':'bDTF','EMB-CUT':'bEMBCUT'};
+  const laserTotalPieces=laserTypes.reduce((a,t)=>a+(prod[t]?.count||0),0);
+  const laserTotalRev=laserTypes.reduce((a,t)=>a+(prod[t]?.rev||0),0);
+  const setJobs=allData.production.filter(r=>r.PatchType==='SET').length;
+  const embJobs=allData.production.filter(r=>r.PatchType==='EMB-BRD').length;
+  const embPieces=allData.production.filter(r=>r.PatchType==='EMB-BRD').reduce((a,r)=>a+(Number(r.Quantity)||0),0);
+  const embRev=allData.production.filter(r=>r.PatchType==='EMB-BRD').reduce((a,r)=>a+(Number(r.TotalRevenue)||0),0);
+
+  // Drill data
+  const artDrill=drillTable(allData.art,[{key:'JobNumber',label:'Job #'},{key:'Description',label:'Description'},{key:'Operator',label:'Operator'},{key:'AssetCount',label:'Assets'},{key:'ProductionFiles',label:'Prod Files'},{key:'Thumbnails',label:'Thumbnails'},{key:'Notes',label:'Notes'}]);
+  const setDrill=drillTable(allData.production.filter(r=>r.PatchType==='SET'),[{key:'JobNumber',label:'Job #'},{key:'Description',label:'Description'},{key:'Operator',label:'Operator'},{key:'Quantity',label:'Qty'}]);
+  const laserDrill=drillTable(allData.production.filter(r=>laserTypes.includes(r.PatchType)),[{key:'JobNumber',label:'Job #'},{key:'Description',label:'Description'},{key:'Operator',label:'Operator'},{key:'PatchType',label:'Type'},{key:'Quantity',label:'Qty'},{key:'TotalRevenue',label:'Revenue'}]);
+  const embDrill=drillTable(allData.production.filter(r=>r.PatchType==='EMB-BRD'),[{key:'JobNumber',label:'Job #'},{key:'Description',label:'Description'},{key:'Operator',label:'Operator'},{key:'Quantity',label:'Qty'},{key:'TotalRevenue',label:'Revenue'}]);
+  const qcDrill=drillTable(allData.qc,[{key:'JobNumber',label:'Job #'},{key:'Description',label:'Description'},{key:'Operator',label:'Operator'},{key:'JobType',label:'Type'},{key:'Quantity',label:'Qty'},{key:'TrueExportValue',label:'True Export'},{key:'ReworkQty',label:'Rework'},{key:'QCNotes',label:'Notes'}]);
+
+  document.getElementById('main-content').innerHTML=`
+    <!-- REVENUE SUMMARY -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div style="background:var(--blue);border-radius:var(--radius);padding:14px 16px;box-shadow:0 2px 8px rgba(24,95,165,0.25)">
+        <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">True Export Value</div>
+        <div style="font-size:26px;font-weight:700;color:#fff;font-family:'Montserrat',sans-serif">$${qc.ps.export.toFixed(2)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:3px">From QC / shipping</div>
+      </div>
+      <div style="background:var(--blue-dark);border-radius:var(--radius);padding:14px 16px;box-shadow:0 2px 8px rgba(12,68,124,0.25)">
+        <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Laser Revenue</div>
+        <div style="font-size:26px;font-weight:700;color:#fff;font-family:'Montserrat',sans-serif">$${laserTotalRev.toFixed(2)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:3px">${laserTotalPieces.toLocaleString()} pcs cut</div>
+      </div>
+      <div style="background:#633806;border-radius:var(--radius);padding:14px 16px;box-shadow:0 2px 8px rgba(99,56,6,0.25)">
+        <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">EMB Revenue</div>
+        <div style="font-size:26px;font-weight:700;color:#fff;font-family:'Montserrat',sans-serif">$${embRev.toFixed(2)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:3px">${embPieces.toLocaleString()} pcs with EMB border</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-left"><div class="dot dot-coral"></div><span class="section-title">Art & Files</span></div>
+        <button class="expand-btn" data-drill="drill-art" onclick="toggleDrill('drill-art')">▼ Details</button>
+      </div>
+      <div class="metrics-row cols-4">
+        <div class="metric"><div class="metric-label">Jobs Processed</div><div class="metric-value blue">${art.jobs}</div></div>
+        <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value blue">${art.assets}</div></div>
+        <div class="metric"><div class="metric-label">Prod. Files Uploaded</div><div class="metric-value teal">${art.pf}</div></div>
+        <div class="metric"><div class="metric-label">Thumbnails Created</div><div class="metric-value teal">${art.th}</div></div>
+      </div>
+      <div class="drill-panel" id="drill-art">${artDrill}</div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-left"><div class="dot dot-blue"></div><span class="section-title">Print & Setup</span></div>
+        <button class="expand-btn" data-drill="drill-set" onclick="toggleDrill('drill-set')">▼ Details</button>
+      </div>
+      <div class="metrics-row" style="grid-template-columns:200px">
+        <div class="metric"><div class="metric-label">Jobs Set Up</div><div class="metric-value blue">${setJobs}</div><div class="metric-sub"><span class="badge bSET">SET</span></div></div>
+      </div>
+      <div class="drill-panel" id="drill-set">${setDrill}</div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-left"><div class="dot dot-gray"></div><span class="section-title">Sublimation & Lamination</span><span class="section-sub" style="font-style:italic;margin-left:6px">coming soon</span></div>
+      </div>
+      <div class="placeholder">Tracker for this role is in progress.</div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-left"><div class="dot dot-blue"></div><span class="section-title">Laser Output</span></div>
+        <button class="expand-btn" data-drill="drill-laser" onclick="toggleDrill('drill-laser')">▼ Details</button>
+      </div>
+      <div class="metrics-row cols-3" style="margin-bottom:8px">
+        <div class="metric"><div class="metric-label">Total Pieces Cut</div><div class="metric-value blue">${laserTotalPieces.toLocaleString()}</div></div>
+        <div class="metric"><div class="metric-label">Total Laser Revenue</div><div class="metric-value blue">$${laserTotalRev.toFixed(2)}</div></div>
+        <div class="metric"><div class="metric-label">Patch Types Run</div><div class="metric-value blue">${laserTypes.filter(t=>(prod[t]?.count||0)>0).length}</div></div>
+      </div>
+      <div class="laser-grid">
+        ${laserTypes.map(t=>`<div class="lcard"><div class="ltype"><span class="badge ${laserBadge[t]}">${t}</span></div><div class="lcount">${(prod[t]?.count||0).toLocaleString()}</div><div class="lrev">$${(prod[t]?.rev||0).toFixed(2)}</div></div>`).join('')}
+      </div>
+      <div class="drill-panel" id="drill-laser">${laserDrill}</div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-left"><div class="dot dot-amber"></div><span class="section-title">EMB Output</span></div>
+        <button class="expand-btn" data-drill="drill-emb" onclick="toggleDrill('drill-emb')">▼ Details</button>
+      </div>
+      <div class="metrics-row cols-3">
+        <div class="metric"><div class="metric-label">EMB Border Jobs</div><div class="metric-value amber">${embJobs}</div><div class="metric-sub"><span class="badge bEMBBRD">EMB-BRD</span></div></div>
+        <div class="metric"><div class="metric-label">Total Pieces</div><div class="metric-value amber">${embPieces.toLocaleString()}</div></div>
+        <div class="metric"><div class="metric-label">Revenue</div><div class="metric-value amber">$${embRev.toFixed(2)}</div></div>
+      </div>
+      <div class="drill-panel" id="drill-emb">${embDrill}</div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-left"><div class="dot dot-teal"></div><span class="section-title">QC & Shipping</span></div>
+        <button class="expand-btn" data-drill="drill-qc" onclick="toggleDrill('drill-qc')">▼ Details</button>
+      </div>
+      <div class="qc-grid">
+        <div class="qc-card">
+          <div class="qc-title">Patch Supply</div>
+          <div class="qc-row"><span>Jobs</span><span>${qc.ps.jobs}</span></div>
+          <div class="qc-row"><span>Pieces shipped</span><span>${qc.ps.pieces.toLocaleString()}</span></div>
+          <div class="qc-row"><span>Order value</span><span>$${qc.ps.val.toFixed(2)}</span></div>
+          <div class="qc-row"><span>Shipping deducted</span><span style="color:var(--amber)">-$${qc.ps.ship.toFixed(2)}</span></div>
+          <div class="qc-row" style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px"><span style="font-weight:600">True export</span><span style="color:var(--teal);font-weight:700">$${qc.ps.export.toFixed(2)}</span></div>
+        </div>
+        <div class="qc-card">
+          <div class="qc-title">Patch Apply</div>
+          <div class="qc-row"><span>Jobs</span><span>${qc.pa.jobs}</span></div>
+          <div class="qc-row"><span>Pieces in-house</span><span>${qc.pa.pieces.toLocaleString()}</span></div>
+          <div class="qc-row"><span>Revenue</span><span style="color:var(--muted);font-size:11px">n/a</span></div>
+        </div>
+        <div class="qc-card">
+          <div class="qc-title">Fill-ins</div>
+          <div class="qc-row"><span>Jobs with rework</span><span style="color:var(--amber)">${qc.fi.jobs}</span></div>
+          <div class="qc-row"><span>Pieces to remake</span><span style="color:var(--amber)">${qc.fi.pieces}</span></div>
+          <div class="qc-row"><span>Rework rate</span><span style="color:var(--amber)">${qc.fi.rate}</span></div>
+        </div>
+      </div>
+      <div class="drill-panel" id="drill-qc">${qcDrill}</div>
+    </div>
+
+    <hr class="divider-line">
+
+    <div class="section">
+      <div class="section-header-left" style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div class="dot dot-gray"></div><span class="section-title">Operator Summary</span></div>
+      ${renderOperatorSummary()}
+    </div>
+  `;
+}
+
+function renderOperatorSummary(){
+  const prodByOp={};
+  allData.production.forEach(r=>{
+    const op=r.Operator||'Unknown';
+    if(!prodByOp[op])prodByOp[op]={jobs:new Set(),pieces:0,rev:0};
+    prodByOp[op].jobs.add(r.JobNumber);
+    prodByOp[op].pieces+=Number(r.Quantity)||0;
+    prodByOp[op].rev+=Number(r.TotalRevenue)||0;
+  });
+  const qcByOp={};
+  allData.qc.forEach(r=>{
+    const op=r.Operator||'Unknown';
+    if(!qcByOp[op])qcByOp[op]={jobs:0,pieces:0,export:0};
+    qcByOp[op].jobs++;qcByOp[op].pieces+=Number(r.Quantity)||0;qcByOp[op].export+=Number(r.TrueExportValue)||0;
+  });
+  const artByOp={};
+  allData.art.forEach(r=>{
+    const op=r.Operator||'Unknown';
+    if(!artByOp[op])artByOp[op]={jobs:0,assets:0};
+    artByOp[op].jobs++;artByOp[op].assets+=Number(r.AssetCount)||0;
+  });
+  const th='padding:9px 12px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:left';
+  const thr='padding:9px 12px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:right';
+  let html=`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--bg)"><th style="${th}">Operator</th><th style="${th}">Role</th><th style="${thr}">Jobs</th><th style="${thr}">Pieces / Assets</th><th style="${thr}">Revenue / Export</th></tr></thead><tbody>`;
+  Object.entries(prodByOp).forEach(([op,d])=>{html+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:9px 12px;font-weight:600;color:var(--blue-dark)">${op}</td><td style="padding:9px 12px;color:var(--muted);font-size:11px">Production</td><td style="padding:9px 12px;text-align:right">${d.jobs.size}</td><td style="padding:9px 12px;text-align:right">${d.pieces.toLocaleString()} pcs</td><td style="padding:9px 12px;text-align:right;font-weight:500;color:var(--blue)">$${d.rev.toFixed(2)}</td></tr>`;});
+  Object.entries(qcByOp).forEach(([op,d])=>{html+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:9px 12px;font-weight:600;color:var(--blue-dark)">${op}</td><td style="padding:9px 12px;color:var(--muted);font-size:11px">QC & Shipping</td><td style="padding:9px 12px;text-align:right">${d.jobs}</td><td style="padding:9px 12px;text-align:right">${d.pieces.toLocaleString()} pcs</td><td style="padding:9px 12px;text-align:right;font-weight:500;color:var(--teal)">$${d.export.toFixed(2)} exported</td></tr>`;});
+  Object.entries(artByOp).forEach(([op,d])=>{html+=`<tr><td style="padding:9px 12px;font-weight:600;color:var(--blue-dark)">${op}</td><td style="padding:9px 12px;color:var(--muted);font-size:11px">Art & Files</td><td style="padding:9px 12px;text-align:right">${d.jobs}</td><td style="padding:9px 12px;text-align:right">${d.assets} assets</td><td style="padding:9px 12px;text-align:right;color:var(--muted);font-size:11px">n/a</td></tr>`;});
+  if(!Object.keys(prodByOp).length&&!Object.keys(qcByOp).length&&!Object.keys(artByOp).length){html+=`<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No data for this period.</td></tr>`;}
+  return html+'</tbody></table></div>';
+}
+</script>
+</body>
+</html>

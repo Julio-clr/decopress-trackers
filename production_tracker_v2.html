@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DecoPress — Production Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Inter:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--bg:#F4F7FF;--card:#fff;--border:#E0E4EE;--text:#1A1D23;--muted:#6B7280;--teal:#0F6E56;--amber:#BA7517;--danger:#E24B4A;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.06)}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+.header{background:var(--blue);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,0.3)}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{background:#fff;color:var(--blue);font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:5px 10px;border-radius:6px}
+.header h1{font-family:'Montserrat',sans-serif;font-size:15px;font-weight:600;color:#fff}
+.header-right{display:flex;align-items:center;gap:12px}
+.op-label{font-size:12px;color:rgba(255,255,255,0.7)}
+.op-select{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 10px;font-size:12px;color:#fff;width:160px;font-family:'Inter',sans-serif}
+.op-select option{color:var(--text);background:#fff}
+.date-badge{font-size:11px;color:rgba(255,255,255,0.7)}
+.status-bar{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;transition:height .2s}
+.status-bar.show{height:36px}
+.status-bar.success{background:#D1FAE5;color:#065F46}
+.status-bar.error{background:#FEE2E2;color:#991B1B}
+.status-bar.saving{background:#EFF6FF;color:var(--blue)}
+.main{max-width:900px;margin:0 auto;padding:20px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'';width:3px;height:14px;background:var(--blue);border-radius:2px;display:inline-block}
+.form-top{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:500;color:var(--muted)}
+.field input,.field select{font-size:13px;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:#FAFBFF;color:var(--text);font-family:'Inter',sans-serif}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue)}
+.field input.duplicate{border-color:var(--amber);background:#FFFBEB}
+.assets-label{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:8px}
+.assets-hdr{display:grid;grid-template-columns:170px 1fr 80px 90px 80px 30px;gap:8px;margin-bottom:5px}
+.assets-hdr span{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.asset-row{display:grid;grid-template-columns:170px 1fr 80px 90px 80px 30px;gap:8px;align-items:center;margin-bottom:7px}
+.asset-row select,.asset-row input{font-size:12px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:#FAFBFF;color:var(--text);font-family:'Inter',sans-serif;width:100%}
+.asset-row select:focus,.asset-row input:focus{outline:none;border-color:var(--blue)}
+.total-disp{font-size:12px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--muted);text-align:right;width:100%}
+.rm-btn{width:28px;height:28px;border:1px solid var(--border);background:none;border-radius:6px;cursor:pointer;font-size:14px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rm-btn:hover{border-color:var(--danger);color:var(--danger)}
+.add-asset-btn{font-size:12px;color:var(--blue);background:none;border:1px dashed var(--blue);border-radius:7px;padding:5px 14px;cursor:pointer;margin:4px 0 14px;font-family:'Inter',sans-serif}
+.add-asset-btn:hover{background:var(--blue-light)}
+.divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+.form-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dup-warning{font-size:11px;color:var(--amber);font-weight:500;display:none}
+.dup-warning.show{display:block}
+.add-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
+.add-btn:hover{background:var(--blue-dark)}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.metric-label{font-size:10px;font-weight:500;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.metric-value{font-size:22px;font-weight:700;color:var(--blue);font-family:'Montserrat',sans-serif}
+.job-table{width:100%;border-collapse:collapse;font-size:12px}
+.job-table th{font-size:10px;font-weight:600;color:var(--muted);text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
+.job-table td{padding:8px 8px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.job-table tr:last-child td{border-bottom:none}
+.empty{text-align:center;padding:24px;color:var(--muted);font-size:12px}
+.jnum{font-weight:600;color:var(--blue-dark)}
+.tcell{color:var(--muted);font-size:11px}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;margin:1px 2px 1px 0}
+.bF{background:#E6F1FB;color:#0C447C}.bE{background:#E1F5EE;color:#085041}.b3D{background:#EEEDFE;color:#3C3489}.bECO{background:#F1EFE8;color:#444}.bDTF{background:#EAF3DE;color:#27500A}.bEMBCUT{background:#FBEAF0;color:#72243E}.bEMBBRD{background:#FAEEDA;color:#633806}.bSET{background:#FAECE7;color:#712B13}
+.save-all-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:14px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between}
+.save-all-info{font-size:12px;color:var(--muted)}
+.save-all-info strong{color:var(--text);font-weight:600}
+.save-all-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
+.save-all-btn:hover{background:#0A5A46}
+.save-all-btn:disabled{background:#9DB8D9;cursor:not-allowed}
+.unsaved-dot{display:inline-block;width:7px;height:7px;background:var(--amber);border-radius:50%;margin-right:5px}
+.del-job-btn{width:24px;height:24px;border:1px solid var(--border);background:none;border-radius:5px;cursor:pointer;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.del-job-btn:hover{border-color:var(--danger);color:var(--danger);background:#FEF2F2}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <div class="logo">DP</div>
+    <h1>Patch Production Tracker</h1>
+  </div>
+  <div class="header-right">
+    <span class="op-label">Operator:</span>
+    <select class="op-select" id="op"><option value="">Loading...</option></select>
+    <span class="date-badge" id="date-disp"></span>
+  </div>
+</div>
+<div class="status-bar" id="status"></div>
+<div class="main">
+  <div class="card">
+    <div class="card-title">Quick Job Entry</div>
+    <div class="form-top">
+      <div class="field"><label>Job Number</label><input type="text" id="jnum" placeholder="e.g. 10482" autocomplete="off"></div>
+      <div class="field"><label>Description</label><input type="text" id="jdesc" placeholder="e.g. Acme Corp — chest patch"></div>
+    </div>
+    <div class="assets-label">Assets</div>
+    <div class="assets-hdr"><span>Patch Type</span><span>Notes</span><span>Qty</span><span>Unit Price</span><span style="text-align:right">Total</span><span></span></div>
+    <div id="asset-list"></div>
+    <button class="add-asset-btn" id="add-asset">+ add asset</button>
+    <div class="divider"></div>
+    <div class="form-bottom">
+      <span class="dup-warning" id="dup-warn">⚠ This job number was already added today.</span>
+      <button class="add-btn" id="add-job">Add Job</button>
+    </div>
+  </div>
+  <div class="summary-grid">
+    <div class="metric"><div class="metric-label">Jobs Added</div><div class="metric-value" id="s-jobs">0</div></div>
+    <div class="metric"><div class="metric-label">Total Pieces</div><div class="metric-value" id="s-pieces">0</div></div>
+    <div class="metric"><div class="metric-label">Total Revenue</div><div class="metric-value" id="s-rev">$0.00</div></div>
+    <div class="metric"><div class="metric-label">Avg Per Piece</div><div class="metric-value" id="s-avg">$0.00</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Today's Job List</div>
+    <table class="job-table">
+      <thead><tr><th>Job #</th><th>Description</th><th>Assets</th><th style="text-align:right">Pieces</th><th style="text-align:right">Revenue</th><th>Time</th><th>Status</th><th></th></tr></thead>
+      <tbody id="job-list"><tr><td colspan="8" class="empty">No jobs added yet.</td></tr></tbody>
+    </table>
+  </div>
+  <div class="save-all-bar" id="save-all-bar" style="display:none">
+    <div class="save-all-info"><span class="unsaved-dot"></span><strong id="unsaved-count">0</strong> jobs ready to save</div>
+    <button class="save-all-btn" id="save-all-btn">Save All to Sheet</button>
+  </div>
+</div>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyb-kBmua6rAqtAksCRrt-5cw2l79XyLFVlXGOQJTUwXHovBx65kzrXCS9aZCVWGdo0aw/exec';
+const TYPES=[
+  {g:'Laser / Print',o:[{v:'F',l:'F — sublimated'},{v:'E',l:'E — etched'},{v:'3D',l:'3D — three-dimensional'},{v:'ECO',l:'ECO — eco patch'},{v:'DTF',l:'DTF — direct film'},{v:'EMB-CUT',l:'EMB-CUT — embroidery cut'}]},
+  {g:'Embroidery',o:[{v:'EMB-BRD',l:'EMB-BRD — emb border'}]},
+  {g:'Setup',o:[{v:'SET',l:'SET — setup'}]}
+];
+const BMAP={'F':'bF','E':'bE','3D':'b3D','ECO':'bECO','DTF':'bDTF','EMB-CUT':'bEMBCUT','EMB-BRD':'bEMBBRD','SET':'bSET'};
+let jobs=[];
+
+document.getElementById('date-disp').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+// Load operators from Google Sheets
+async function loadOperators(){
+  try{
+    const resp=await fetch(`${SCRIPT_URL}?type=operators`);
+    const result=await resp.json();
+    const sel=document.getElementById('op');
+    sel.innerHTML='<option value="">Select your name...</option>';
+    if(result.success){result.data.forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o);});}
+  }catch(e){
+    const sel=document.getElementById('op');
+    sel.innerHTML='<option value="">Select your name...</option>';
+  }
+}
+loadOperators();
+
+function makeSelect(){
+  let s='<select class="type-sel"><option value="">Select type...</option>';
+  TYPES.forEach(g=>{s+=`<optgroup label="— ${g.g} —">`;g.o.forEach(o=>s+=`<option value="${o.v}">${o.l}</option>`);s+='</optgroup>';});
+  return s+'</select>';
+}
+
+function addRow(removable=true){
+  const div=document.createElement('div');div.className='asset-row';
+  div.innerHTML=`${makeSelect()}<input type="text" placeholder="optional" class="nf"><input type="number" placeholder="0" min="0" class="qf" style="text-align:right"><input type="number" placeholder="0.00" min="0" step="0.01" class="pf" style="text-align:right"><div class="total-disp">$0.00</div><button class="rm-btn" style="${removable?'':'visibility:hidden'}">×</button>`;
+  div.querySelector('.qf').addEventListener('input',()=>calcT(div));
+  div.querySelector('.pf').addEventListener('input',()=>calcT(div));
+  div.querySelector('.rm-btn').addEventListener('click',()=>div.remove());
+  document.getElementById('asset-list').appendChild(div);
+}
+
+function calcT(row){
+  const q=parseFloat(row.querySelector('.qf').value)||0;
+  const p=parseFloat(row.querySelector('.pf').value)||0;
+  row.querySelector('.total-disp').textContent='$'+(q*p).toFixed(2);
+}
+
+document.getElementById('jnum').addEventListener('input',function(){
+  const val=this.value.trim().toLowerCase();
+  const isDup=jobs.some(j=>j.jnum.toLowerCase()===val);
+  const warn=document.getElementById('dup-warn');
+  if(isDup&&val){this.classList.add('duplicate');warn.classList.add('show');}
+  else{this.classList.remove('duplicate');warn.classList.remove('show');}
+});
+
+function showStatus(msg,type){
+  const s=document.getElementById('status');
+  s.textContent=msg;s.className=`status-bar show ${type}`;
+  if(type==='success')setTimeout(()=>{s.className='status-bar';},4000);
+}
+
+document.getElementById('add-asset').addEventListener('click',()=>addRow(true));
+
+document.getElementById('add-job').addEventListener('click',()=>{
+  const jnum=document.getElementById('jnum').value.trim();
+  const jdesc=document.getElementById('jdesc').value.trim();
+  const op=document.getElementById('op').value;
+  if(!op){alert('Please select your name before adding a job.');return;}
+  if(!jnum){alert('Please enter a job number.');return;}
+  const isDup=jobs.some(j=>j.jnum.toLowerCase()===jnum.toLowerCase());
+  if(isDup){const proceed=confirm(`⚠ Job #${jnum} was already added today.\n\nAdd it again?`);if(!proceed)return;}
+  const rows=document.querySelectorAll('#asset-list .asset-row');
+  let assets=[];
+  rows.forEach(r=>{
+    const type=r.querySelector('.type-sel').value;
+    const notes=r.querySelector('.nf').value.trim();
+    const qty=parseFloat(r.querySelector('.qf').value)||0;
+    const price=parseFloat(r.querySelector('.pf').value)||0;
+    if(type&&qty>0)assets.push({type,notes,qty,price,total:qty*price});
+  });
+  if(!assets.length){alert('Add at least one asset with type and quantity.');return;}
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  const tQty=assets.reduce((a,x)=>a+x.qty,0);
+  const tRev=assets.reduce((a,x)=>a+x.total,0);
+  jobs.push({id:Date.now(),jnum,jdesc,op,assets,tQty,tRev,timeStr,saved:false,timestamp:now.toISOString()});
+  renderList();updateSummary();updateSaveBar();resetForm();
+});
+
+document.getElementById('save-all-btn').addEventListener('click',async()=>{
+  const op=document.getElementById('op').value;
+  if(!op){alert('Please select your name before saving.');return;}
+  const unsaved=jobs.filter(j=>!j.saved);
+  if(!unsaved.length)return;
+  const btn=document.getElementById('save-all-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+  showStatus(`Saving ${unsaved.length} jobs to Google Sheets...`,'saving');
+  let allSaved=true;
+  for(const job of unsaved){
+    for(const a of job.assets){
+      try{
+        const resp=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'production',jobNumber:job.jnum,description:job.jdesc,operator:job.op,patchType:a.type,quantity:a.qty,unitPrice:a.price,totalRevenue:a.total,notes:a.notes,date:job.timestamp})});
+        const result=await resp.json();
+        if(!result.success)throw new Error(result.error);
+      }catch(e){allSaved=false;break;}
+    }
+    if(!allSaved)break;
+    job.saved=true;
+  }
+  if(allSaved){renderList();updateSaveBar();showStatus('✓ All jobs saved to Google Sheets','success');}
+  else{showStatus('❌ Error saving. Try again.','error');}
+  btn.disabled=false;btn.textContent='Save All to Sheet';
+});
+
+function removeJob(id){
+  if(!confirm('Remove this job from the list?'))return;
+  jobs=jobs.filter(j=>j.id!==id);
+  renderList();updateSummary();updateSaveBar();
+}
+
+function updateSaveBar(){
+  const unsaved=jobs.filter(j=>!j.saved);
+  const bar=document.getElementById('save-all-bar');
+  if(unsaved.length>0){bar.style.display='flex';document.getElementById('unsaved-count').textContent=unsaved.length;}
+  else{bar.style.display='none';}
+}
+
+function renderList(){
+  const tb=document.getElementById('job-list');
+  if(!jobs.length){tb.innerHTML='<tr><td colspan="8" class="empty">No jobs added yet.</td></tr>';return;}
+  tb.innerHTML=jobs.map(j=>`<tr>
+    <td class="jnum">${j.jnum}</td>
+    <td>${j.jdesc||'—'}</td>
+    <td>${j.assets.map(a=>`<span class="badge ${BMAP[a.type]||'bF'}" title="${a.notes||''}">${a.type}${a.notes?'*':''}</span>`).join('')}</td>
+    <td style="text-align:right;font-weight:500">${j.tQty}</td>
+    <td style="text-align:right;font-weight:500">$${j.tRev.toFixed(2)}</td>
+    <td class="tcell">${j.timeStr}</td>
+    <td>${j.saved?'<span style="font-size:11px;color:var(--teal)">✓ Saved</span>':'<span style="font-size:11px;color:var(--amber)">● Unsaved</span>'}</td>
+    <td><button class="del-job-btn" onclick="removeJob(${j.id})" title="Remove job">×</button></td>
+  </tr>`).join('');
+}
+
+function updateSummary(){
+  const tJ=jobs.length,tP=jobs.reduce((a,j)=>a+j.tQty,0),tR=jobs.reduce((a,j)=>a+j.tRev,0);
+  document.getElementById('s-jobs').textContent=tJ;
+  document.getElementById('s-pieces').textContent=tP;
+  document.getElementById('s-rev').textContent='$'+tR.toFixed(2);
+  document.getElementById('s-avg').textContent='$'+(tP>0?tR/tP:0).toFixed(2);
+}
+
+function resetForm(){
+  document.getElementById('jnum').value='';
+  document.getElementById('jdesc').value='';
+  document.getElementById('jnum').classList.remove('duplicate');
+  document.getElementById('dup-warn').classList.remove('show');
+  document.getElementById('asset-list').innerHTML='';
+  addRow(false);
+}
+
+addRow(false);
+</script>
+</body>
+</html>
