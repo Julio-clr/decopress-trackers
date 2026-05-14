@@ -15,8 +15,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
 .header h1{font-family:'Montserrat',sans-serif;font-size:15px;font-weight:600;color:#fff}
 .header-right{display:flex;align-items:center;gap:12px}
 .op-label{font-size:12px;color:rgba(255,255,255,0.7)}
-.op-input{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 10px;font-size:12px;color:#fff;width:140px;font-family:'Inter',sans-serif}
-.op-input::placeholder{color:rgba(255,255,255,0.5)}
+.op-select{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 10px;font-size:12px;color:#fff;width:160px;font-family:'Inter',sans-serif}
+.op-select option{color:var(--text);background:#fff}
 .date-badge{font-size:11px;color:rgba(255,255,255,0.7)}
 .status-bar{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;transition:height .2s}
 .status-bar.show{height:36px}
@@ -50,7 +50,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
 .dup-warning.show{display:block}
 .add-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
 .add-btn:hover{background:var(--blue-dark)}
-.add-btn:disabled{background:#9DB8D9;cursor:not-allowed}
 .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .metric{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
 .metric-label{font-size:10px;font-weight:500;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
@@ -71,6 +70,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
 .save-all-btn:hover{background:#0A5A46}
 .save-all-btn:disabled{background:#9DB8D9;cursor:not-allowed}
 .unsaved-dot{display:inline-block;width:7px;height:7px;background:var(--amber);border-radius:50%;margin-right:5px}
+.del-job-btn{width:24px;height:24px;border:1px solid var(--border);background:none;border-radius:5px;cursor:pointer;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.del-job-btn:hover{border-color:var(--danger);color:var(--danger);background:#FEF2F2}
 </style>
 </head>
 <body>
@@ -81,7 +82,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
   </div>
   <div class="header-right">
     <span class="op-label">Operator:</span>
-    <input class="op-input" type="text" id="op" placeholder="Enter your name">
+    <select class="op-select" id="op"><option value="">Loading...</option></select>
     <span class="date-badge" id="date-disp"></span>
   </div>
 </div>
@@ -103,28 +104,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
       <button class="add-btn" id="add-job">Add Job</button>
     </div>
   </div>
-
   <div class="summary-grid">
     <div class="metric"><div class="metric-label">Jobs Added</div><div class="metric-value" id="s-jobs">0</div></div>
     <div class="metric"><div class="metric-label">Total Pieces</div><div class="metric-value" id="s-pieces">0</div></div>
     <div class="metric"><div class="metric-label">Total Revenue</div><div class="metric-value" id="s-rev">$0.00</div></div>
     <div class="metric"><div class="metric-label">Avg Per Piece</div><div class="metric-value" id="s-avg">$0.00</div></div>
   </div>
-
   <div class="card">
     <div class="card-title">Today's Job List</div>
     <table class="job-table">
-      <thead><tr><th>Job #</th><th>Description</th><th>Assets</th><th style="text-align:right">Pieces</th><th style="text-align:right">Revenue</th><th>Time</th><th>Status</th></tr></thead>
-      <tbody id="job-list"><tr><td colspan="7" class="empty">No jobs added yet.</td></tr></tbody>
+      <thead><tr><th>Job #</th><th>Description</th><th>Assets</th><th style="text-align:right">Pieces</th><th style="text-align:right">Revenue</th><th>Time</th><th>Status</th><th></th></tr></thead>
+      <tbody id="job-list"><tr><td colspan="8" class="empty">No jobs added yet.</td></tr></tbody>
     </table>
   </div>
-
   <div class="save-all-bar" id="save-all-bar" style="display:none">
     <div class="save-all-info"><span class="unsaved-dot"></span><strong id="unsaved-count">0</strong> jobs ready to save</div>
     <button class="save-all-btn" id="save-all-btn">Save All to Sheet</button>
   </div>
 </div>
-
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyb-kBmua6rAqtAksCRrt-5cw2l79XyLFVlXGOQJTUwXHovBx65kzrXCS9aZCVWGdo0aw/exec';
 const TYPES=[
@@ -136,6 +133,21 @@ const BMAP={'F':'bF','E':'bE','3D':'b3D','ECO':'bECO','DTF':'bDTF','EMB-CUT':'bE
 let jobs=[];
 
 document.getElementById('date-disp').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+// Load operators from Google Sheets
+async function loadOperators(){
+  try{
+    const resp=await fetch(`${SCRIPT_URL}?type=operators`);
+    const result=await resp.json();
+    const sel=document.getElementById('op');
+    sel.innerHTML='<option value="">Select your name...</option>';
+    if(result.success){result.data.forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o);});}
+  }catch(e){
+    const sel=document.getElementById('op');
+    sel.innerHTML='<option value="">Select your name...</option>';
+  }
+}
+loadOperators();
 
 function makeSelect(){
   let s='<select class="type-sel"><option value="">Select type...</option>';
@@ -177,7 +189,8 @@ document.getElementById('add-asset').addEventListener('click',()=>addRow(true));
 document.getElementById('add-job').addEventListener('click',()=>{
   const jnum=document.getElementById('jnum').value.trim();
   const jdesc=document.getElementById('jdesc').value.trim();
-  const op=document.getElementById('op').value.trim()||'Unknown';
+  const op=document.getElementById('op').value;
+  if(!op){alert('Please select your name before adding a job.');return;}
   if(!jnum){alert('Please enter a job number.');return;}
   const isDup=jobs.some(j=>j.jnum.toLowerCase()===jnum.toLowerCase());
   if(isDup){const proceed=confirm(`⚠ Job #${jnum} was already added today.\n\nAdd it again?`);if(!proceed)return;}
@@ -195,12 +208,13 @@ document.getElementById('add-job').addEventListener('click',()=>{
   const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
   const tQty=assets.reduce((a,x)=>a+x.qty,0);
   const tRev=assets.reduce((a,x)=>a+x.total,0);
-  jobs.push({jnum,jdesc,op,assets,tQty,tRev,timeStr,saved:false,timestamp:now.toISOString()});
+  jobs.push({id:Date.now(),jnum,jdesc,op,assets,tQty,tRev,timeStr,saved:false,timestamp:now.toISOString()});
   renderList();updateSummary();updateSaveBar();resetForm();
 });
 
-// SAVE ALL
 document.getElementById('save-all-btn').addEventListener('click',async()=>{
+  const op=document.getElementById('op').value;
+  if(!op){alert('Please select your name before saving.');return;}
   const unsaved=jobs.filter(j=>!j.saved);
   if(!unsaved.length)return;
   const btn=document.getElementById('save-all-btn');
@@ -218,30 +232,37 @@ document.getElementById('save-all-btn').addEventListener('click',async()=>{
     if(!allSaved)break;
     job.saved=true;
   }
-  if(allSaved){
-    renderList();updateSaveBar();
-    showStatus(`✓ All jobs saved to Google Sheets`,'success');
-  } else {
-    showStatus('❌ Error saving. Check your connection and try again.','error');
-  }
+  if(allSaved){renderList();updateSaveBar();showStatus('✓ All jobs saved to Google Sheets','success');}
+  else{showStatus('❌ Error saving. Try again.','error');}
   btn.disabled=false;btn.textContent='Save All to Sheet';
 });
+
+function removeJob(id){
+  if(!confirm('Remove this job from the list?'))return;
+  jobs=jobs.filter(j=>j.id!==id);
+  renderList();updateSummary();updateSaveBar();
+}
 
 function updateSaveBar(){
   const unsaved=jobs.filter(j=>!j.saved);
   const bar=document.getElementById('save-all-bar');
-  if(unsaved.length>0){
-    bar.style.display='flex';
-    document.getElementById('unsaved-count').textContent=unsaved.length;
-  } else {
-    bar.style.display='none';
-  }
+  if(unsaved.length>0){bar.style.display='flex';document.getElementById('unsaved-count').textContent=unsaved.length;}
+  else{bar.style.display='none';}
 }
 
 function renderList(){
   const tb=document.getElementById('job-list');
-  if(!jobs.length){tb.innerHTML='<tr><td colspan="7" class="empty">No jobs added yet.</td></tr>';return;}
-  tb.innerHTML=jobs.map(j=>`<tr><td class="jnum">${j.jnum}</td><td>${j.jdesc||'—'}</td><td>${j.assets.map(a=>`<span class="badge ${BMAP[a.type]||'bF'}">${a.type}</span>`).join('')}</td><td style="text-align:right;font-weight:500">${j.tQty}</td><td style="text-align:right;font-weight:500">$${j.tRev.toFixed(2)}</td><td class="tcell">${j.timeStr}</td><td>${j.saved?'<span style="font-size:11px;color:var(--teal)">✓ Saved</span>':'<span style="font-size:11px;color:var(--amber)">● Unsaved</span>'}</td></tr>`).join('');
+  if(!jobs.length){tb.innerHTML='<tr><td colspan="8" class="empty">No jobs added yet.</td></tr>';return;}
+  tb.innerHTML=jobs.map(j=>`<tr>
+    <td class="jnum">${j.jnum}</td>
+    <td>${j.jdesc||'—'}</td>
+    <td>${j.assets.map(a=>`<span class="badge ${BMAP[a.type]||'bF'}" title="${a.notes||''}">${a.type}${a.notes?'*':''}</span>`).join('')}</td>
+    <td style="text-align:right;font-weight:500">${j.tQty}</td>
+    <td style="text-align:right;font-weight:500">$${j.tRev.toFixed(2)}</td>
+    <td class="tcell">${j.timeStr}</td>
+    <td>${j.saved?'<span style="font-size:11px;color:var(--teal)">✓ Saved</span>':'<span style="font-size:11px;color:var(--amber)">● Unsaved</span>'}</td>
+    <td><button class="del-job-btn" onclick="removeJob(${j.id})" title="Remove job">×</button></td>
+  </tr>`).join('');
 }
 
 function updateSummary(){
