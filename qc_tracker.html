@@ -33,9 +33,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
 .field input,.field select{font-size:12px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:#FAFBFF;color:var(--text);font-family:'Inter',sans-serif;width:100%}
 .field input:focus,.field select:focus{outline:none;border-color:var(--blue)}
 .field input.duplicate{border-color:var(--amber);background:#FFFBEB}
-.bottom-row{display:grid;grid-template-columns:120px 1fr;gap:8px;margin-bottom:10px;align-items:end}
+.bottom-row{display:grid;grid-template-columns:120px 120px 1fr;gap:8px;margin-bottom:10px;align-items:end}
 .ship-wrap{transition:opacity .2s}
 .ship-wrap.hidden{opacity:0;pointer-events:none}
+.outsource-wrap{display:flex;align-items:center;gap:8px;padding-top:20px}
+.outsource-wrap label{font-size:12px;color:var(--text);font-weight:500;cursor:pointer}
+.outsource-wrap input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--blue)}
 .divider{border:none;border-top:1px solid var(--border);margin:10px 0}
 .form-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .dup-warning{font-size:11px;color:var(--amber);font-weight:500;display:none}
@@ -47,7 +50,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
 .metric-label{font-size:10px;font-weight:500;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
 .metric-value{font-size:18px;font-weight:700;color:var(--blue);font-family:'Montserrat',sans-serif}
 .metric-value.warn{color:var(--amber)}
-.breakdown-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.breakdown-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px}
 .bc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;box-shadow:var(--shadow)}
 .bc-title{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em}
 .bc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
@@ -59,8 +62,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
 .job-table tr:last-child td{border-bottom:none}
 .empty{text-align:center;padding:24px;color:var(--muted);font-size:12px}
 .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600}
-.bps{background:#E6F1FB;color:#0C447C}.bpa{background:#E1F5EE;color:#085041}
+.bps{background:#E6F1FB;color:#0C447C}.bpa{background:#E1F5EE;color:#085041}.bout{background:#EEEDFE;color:#3C3489}
 .rw{color:var(--amber);font-weight:600}
+.out-tag{font-size:10px;color:var(--amber);font-weight:600;margin-left:4px}
 .save-all-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:14px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between}
 .save-all-info{font-size:12px;color:var(--muted)}
 .save-all-info strong{color:var(--text);font-weight:600}
@@ -98,6 +102,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
     </div>
     <div class="bottom-row">
       <div class="field ship-wrap hidden" id="ship-wrap"><label>Shipping Cost</label><input type="number" id="ship" placeholder="0.00" min="0" step="0.01" style="text-align:right"></div>
+      <div class="outsource-wrap">
+        <input type="checkbox" id="outsourced">
+        <label for="outsourced">Outsourced</label>
+      </div>
       <div class="field"><label>QC Notes</label><input type="text" id="qcnotes" placeholder="Optional notes..."></div>
     </div>
     <div class="divider"></div>
@@ -106,6 +114,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
       <button class="add-btn" id="add-job">Add Job</button>
     </div>
   </div>
+
   <div class="summary-grid">
     <div class="metric"><div class="metric-label">Jobs Added</div><div class="metric-value" id="s-jobs">0</div></div>
     <div class="metric"><div class="metric-label">Total Pieces</div><div class="metric-value" id="s-pieces">0</div></div>
@@ -113,6 +122,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
     <div class="metric"><div class="metric-label">True Export Value</div><div class="metric-value" id="s-export">$0.00</div></div>
     <div class="metric"><div class="metric-label">Rework Rate</div><div class="metric-value warn" id="s-rate">0%</div></div>
   </div>
+
   <div class="breakdown-grid">
     <div class="bc">
       <div class="bc-title">Patch Supply</div>
@@ -128,6 +138,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
       <div class="bc-row"><span>Pieces in-house</span><span id="pa-pieces">0</span></div>
       <div class="bc-row"><span>Revenue</span><span style="color:var(--muted);font-size:11px">n/a</span></div>
     </div>
+    <div class="bc" style="border-color:#D4B8F0">
+      <div class="bc-title" style="color:#5B3F8A">Outsourced</div>
+      <div class="bc-row"><span>Jobs</span><span id="out-jobs">0</span></div>
+      <div class="bc-row"><span>Total pieces</span><span id="out-pieces">0</span></div>
+      <div class="bc-row"><span>Order value</span><span id="out-val">$0.00</span></div>
+      <div class="bc-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><span style="font-weight:600">True export</span><span id="out-export" style="color:var(--teal);font-weight:700">$0.00</span></div>
+    </div>
     <div class="bc">
       <div class="bc-title">Fill-ins</div>
       <div class="bc-row"><span>Jobs with rework</span><span id="fi-jobs" style="color:var(--amber)">0</span></div>
@@ -135,6 +152,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
       <div class="bc-row"><span>Rework rate</span><span id="fi-rate" style="color:var(--amber)">0%</span></div>
     </div>
   </div>
+
   <div class="card">
     <div class="card-title">Today's Job List</div>
     <table class="job-table">
@@ -142,6 +160,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
       <tbody id="job-list"><tr><td colspan="12" class="empty">No jobs added yet.</td></tr></tbody>
     </table>
   </div>
+
   <div class="save-all-bar" id="save-all-bar" style="display:none">
     <div class="save-all-info"><span class="unsaved-dot"></span><strong id="unsaved-count">0</strong> jobs ready to save</div>
     <button class="save-all-btn" id="save-all-btn">Save All to Sheet</button>
@@ -193,6 +212,7 @@ document.getElementById('add-job').addEventListener('click',()=>{
   const rework=parseFloat(document.getElementById('rework').value)||0;
   const ship=jtype==='PS'?(parseFloat(document.getElementById('ship').value)||0):0;
   const qcnotes=document.getElementById('qcnotes').value.trim();
+  const outsourced=document.getElementById('outsourced').checked;
   if(!op){alert('Please select your name before adding a job.');return;}
   if(!jnum){alert('Please enter a job number.');return;}
   if(!jtype){alert('Please select a type.');return;}
@@ -202,7 +222,7 @@ document.getElementById('add-job').addEventListener('click',()=>{
   const trueExport=jtype==='PS'?oval-ship:0;
   const now=new Date();
   const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-  jobs.push({id:Date.now(),jnum,jdesc,op,jtype,qty,oval,ship,trueExport,rework,qcnotes,timeStr,saved:false,timestamp:now.toISOString()});
+  jobs.push({id:Date.now(),jnum,jdesc,op,jtype,qty,oval,ship,trueExport,rework,qcnotes,outsourced,timeStr,saved:false,timestamp:now.toISOString()});
   renderAll();updateSaveBar();resetForm();
 });
 
@@ -217,7 +237,7 @@ document.getElementById('save-all-btn').addEventListener('click',async()=>{
   let allSaved=true;
   for(const job of unsaved){
     try{
-      const resp=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'qc',jobNumber:job.jnum,description:job.jdesc,operator:job.op,jobType:job.jtype,quantity:job.qty,orderValue:job.oval,shippingCost:job.ship,trueExportValue:job.trueExport,reworkQty:job.rework,qcNotes:job.qcnotes,date:job.timestamp})});
+      const resp=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'qc',jobNumber:job.jnum,description:job.jdesc,operator:job.op,jobType:job.jtype,quantity:job.qty,orderValue:job.oval,shippingCost:job.ship,trueExportValue:job.trueExport,reworkQty:job.rework,qcNotes:job.qcnotes,outsourced:job.outsourced?'Yes':'No',date:job.timestamp})});
       const result=await resp.json();
       if(!result.success)throw new Error(result.error);
       job.saved=true;
@@ -247,24 +267,29 @@ function renderAll(){
   tb.innerHTML=jobs.map(j=>`<tr>
     <td style="font-weight:600;color:var(--blue-dark)">${j.jnum}</td>
     <td>${j.jdesc||'—'}</td>
-    <td><span class="badge ${j.jtype==='PS'?'bps':'bpa'}">${j.jtype==='PS'?'Patch supply':'Patch apply'}</span></td>
+    <td><span class="badge ${j.jtype==='PS'?'bps':'bpa'}">${j.jtype==='PS'?'Patch supply':'Patch apply'}</span>${j.outsourced?'<span class="out-tag">OUTSOURCED</span>':''}</td>
     <td style="text-align:right">${j.qty}</td>
     <td style="text-align:right">${j.oval>0?'$'+j.oval.toFixed(2):'—'}</td>
     <td style="text-align:right">${j.ship>0?'$'+j.ship.toFixed(2):'—'}</td>
     <td style="text-align:right">${j.trueExport>0?'$'+j.trueExport.toFixed(2):'—'}</td>
     <td style="text-align:right">${j.rework>0?`<span class="rw">${j.rework}</span>`:'—'}</td>
-    <td style="color:var(--muted);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${j.qcnotes||''}">${j.qcnotes||'—'}</td>
+    <td style="color:var(--muted);font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${j.qcnotes||''}">${j.qcnotes||'—'}</td>
     <td style="color:var(--muted);font-size:11px">${j.timeStr}</td>
     <td>${j.saved?'<span style="font-size:11px;color:var(--teal)">✓ Saved</span>':'<span style="font-size:11px;color:var(--amber)">● Unsaved</span>'}</td>
     <td><button class="del-job-btn" onclick="removeJob(${j.id})" title="Remove job">×</button></td>
   </tr>`).join('');
+
   const tJ=jobs.length,tP=jobs.reduce((a,j)=>a+j.qty,0),tR=jobs.reduce((a,j)=>a+j.rework,0),tE=jobs.reduce((a,j)=>a+j.trueExport,0);
   document.getElementById('s-jobs').textContent=tJ;
   document.getElementById('s-pieces').textContent=tP;
   document.getElementById('s-rework').textContent=tR;
   document.getElementById('s-export').textContent='$'+tE.toFixed(2);
   document.getElementById('s-rate').textContent=tP>0?Math.round(tR/tP*100)+'%':'0%';
-  const ps=jobs.filter(j=>j.jtype==='PS'),pa=jobs.filter(j=>j.jtype==='PA');
+
+  const ps=jobs.filter(j=>j.jtype==='PS'&&!j.outsourced);
+  const pa=jobs.filter(j=>j.jtype==='PA'&&!j.outsourced);
+  const out=jobs.filter(j=>j.outsourced);
+
   document.getElementById('ps-jobs').textContent=ps.length;
   document.getElementById('ps-pieces').textContent=ps.reduce((a,j)=>a+j.qty,0);
   document.getElementById('ps-val').textContent='$'+ps.reduce((a,j)=>a+j.oval,0).toFixed(2);
@@ -272,15 +297,21 @@ function renderAll(){
   document.getElementById('ps-export').textContent='$'+ps.reduce((a,j)=>a+j.trueExport,0).toFixed(2);
   document.getElementById('pa-jobs').textContent=pa.length;
   document.getElementById('pa-pieces').textContent=pa.reduce((a,j)=>a+j.qty,0);
+  document.getElementById('out-jobs').textContent=out.length;
+  document.getElementById('out-pieces').textContent=out.reduce((a,j)=>a+j.qty,0);
+  document.getElementById('out-val').textContent='$'+out.reduce((a,j)=>a+j.oval,0).toFixed(2);
+  document.getElementById('out-export').textContent='$'+out.reduce((a,j)=>a+j.trueExport,0).toFixed(2);
+
   const fiJ=jobs.filter(j=>j.rework>0);
   document.getElementById('fi-jobs').textContent=fiJ.length;
-  document.getElementById('fi-pieces').textContent=jobs.reduce((a,j)=>a+j.rework,0);
+  document.getElementById('fi-pieces').textContent=tR;
   document.getElementById('fi-rate').textContent=tP>0?Math.round(tR/tP*100)+'%':'0%';
 }
 
 function resetForm(){
   ['jnum','jdesc','qty','oval','rework','ship','qcnotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('jtype').value='';
+  document.getElementById('outsourced').checked=false;
   document.getElementById('ship-wrap').classList.add('hidden');
   document.getElementById('jnum').classList.remove('duplicate');
   document.getElementById('dup-warn').classList.remove('show');
